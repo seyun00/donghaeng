@@ -11,7 +11,7 @@ export interface TouristSpot {
 export async function fetchTourSpots(areaCode: number): Promise<TouristSpot[]> {
   const url = new URL('https://apis.data.go.kr/B551011/KorService1/areaBasedList1');
   const params = {
-    serviceKey: TOURAPI_KEY,
+    serviceKey: TOURAPI_KEY || "",
     MobileOS: 'ETC',
     MobileApp: 'TourApp',
     _type: 'json',
