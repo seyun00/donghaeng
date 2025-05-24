@@ -1,4 +1,4 @@
-const TOURAPI_KEY = process.env.REACT_APP_TOURAPI_KEY;
+const TOURAPI_KEY = encodeURIComponent(process.env.REACT_APP_TOURAPI_KEY ?? '');
 
 export interface TouristSpot {
   id: string;
