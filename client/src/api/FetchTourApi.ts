@@ -1,5 +1,4 @@
-const TOURAPI_KEY = encodeURIComponent(process.env.REACT_APP_TOURAPI_KEY ?? '');
-
+const encodedKey = encodeURIComponent(process.env.REACT_APP_TOURAPI_KEY ?? '');
 export interface TouristSpot {
   id: string;
   name: string;
@@ -11,7 +10,7 @@ export interface TouristSpot {
 export async function fetchTourSpots(areaCode: number): Promise<TouristSpot[]> {
   const url = new URL('https://apis.data.go.kr/B551011/KorService1/areaBasedList1');
   const params = {
-    serviceKey: TOURAPI_KEY || '',
+    serviceKey: encodedKey,
     MobileOS: 'ETC',
     MobileApp: 'TourApp',
     _type: 'json',
