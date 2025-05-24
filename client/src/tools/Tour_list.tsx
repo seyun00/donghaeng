@@ -1,4 +1,4 @@
-import { TouristSpot } from "../api/fetch_tour_api";
+import { TouristSpot } from "../api/FetchTourApi";
 
 interface TouristSpotListProps {
   spots: TouristSpot[];
