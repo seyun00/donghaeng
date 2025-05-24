@@ -1,5 +1,5 @@
 const TOURAPI_KEY = process.env.REACT_APP_TOURAPI_KEY;
-
+const decodedKey = decodeURIComponent(TOURAPI_KEY || "");
 export interface TouristSpot {
   id: string;
   name: string;
@@ -11,7 +11,7 @@ export interface TouristSpot {
 export async function fetchTourSpots(areaCode: number): Promise<TouristSpot[]> {
   const url = new URL('https://apis.data.go.kr/B551011/KorService1/areaBasedList1');
   const params = {
-    serviceKey: TOURAPI_KEY || "",
+    serviceKey: decodedKey,
     MobileOS: 'ETC',
     MobileApp: 'TourApp',
     _type: 'json',
@@ -21,6 +21,9 @@ export async function fetchTourSpots(areaCode: number): Promise<TouristSpot[]> {
     contentTypeId: '12',
     areaCode: areaCode.toString(),
   };
+  console.log("키 : "+TOURAPI_KEY)
+  console.log(typeof(TOURAPI_KEY))
+  console.log("디코딩된 키: "+decodedKey)
 
   Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));
 
