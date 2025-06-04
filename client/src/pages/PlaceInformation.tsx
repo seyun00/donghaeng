@@ -7,13 +7,17 @@ import TouristSpotList from "../tools/Tour_list";
 import { FetchAreaCode } from "../api/FetchTourApi";
 import AreaButton from "../components/AreaButton";
 import { Area } from "../components/AreaButton";
+import ContentsTypeButton from "../components/ContentsTypeButton";
+import { contentsTypeList } from "../components/ContentsTypeButton";
+import { contentsType } from "../components/ContentsTypeButton";
 
 export default function PlaceInformation() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [areaCode, setAreaCode] = useState(1);
-  const [serviceCategory, setServiceCategory] = useState(12);
+  const [areaCode, setAreaCode] = useState(1); // 지역코드, default : 서울
 
-  const { spots, loading, error } = useTouristSpots(areaCode); // 커스텀 훅 사용
+  const [contentsType, setContentsType] = useState(12); // 콘텐츠타입 코드, default : 관광지지
+
+  const { spots, loading, error } = useTouristSpots(areaCode, contentsType); // 커스텀 훅 사용
 
   const filteredSpots = spots.filter(spot =>
     spot.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -36,13 +40,26 @@ export default function PlaceInformation() {
       
       <br />
       <br />
+
+      {/* 지역 선택 버튼 */}
       <div>
         지역 선택 : {areaList.map((item:any) => 
-        (<AreaButton area={item} key={item.id} onClick={()=>setAreaCode(item.areaCode)}/>)
-      )}
+        (<AreaButton 
+          area={item} 
+          key={item.id}
+          onClick={()=>setAreaCode(item.areaCode)}
+          />))}
       </div>
+
+      {/* 서비스 타입 선택 버튼*/}
       <div>
-        카테고리 선택 : 
+        카테고리 선택 : {contentsTypeList.map((item:contentsType) => 
+          ( <ContentsTypeButton 
+              key={item.typeID}
+              typeID={item.typeID} 
+              typeName={item.typeName}
+              onClick={()=>setContentsType(item.typeID)}
+            />))}
       </div>
 
       {loading && <p>로딩 중...</p>}

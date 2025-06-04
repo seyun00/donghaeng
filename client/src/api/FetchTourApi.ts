@@ -9,7 +9,7 @@ export interface TouristSpot {
 }
 
 // 지역 기반 관광정보 조회
-export async function fetchTourSpots(areaCode: number): Promise<TouristSpot[]> {
+export async function fetchTourSpots(areaCode: number, contentsType: number): Promise<TouristSpot[]> {
   const url = new URL('https://apis.data.go.kr/B551011/KorService1/areaBasedList1');
   const params = {
     serviceKey: decodedKey,
@@ -19,7 +19,7 @@ export async function fetchTourSpots(areaCode: number): Promise<TouristSpot[]> {
     numOfRows: '10',
     pageNo: '1',
     arrange: 'B',
-    contentTypeId: '12',
+    contentTypeId: contentsType.toString(),
     areaCode: areaCode.toString(),
   };
 
