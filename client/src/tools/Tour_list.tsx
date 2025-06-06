@@ -1,4 +1,5 @@
 import { TouristSpot } from "../api/FetchTourApi";
+import { Link } from "react-router-dom";
 
 interface TouristSpotListProps {
   spots: TouristSpot[];
@@ -9,15 +10,15 @@ export default function TouristSpotList({ spots }: TouristSpotListProps) {
 
   return (
     <ul>
-      {spots.map(({ id, name, imageUrl, description, location }) => (
+      {spots.map(({ id, name, imageUrl, description }) => (
         <li key={id}>
-          <h3>{name}</h3>
+          <Link to={`/spot/${id}`}>
+            <h3>{name}</h3>
+          </Link>
           {imageUrl && <img src={imageUrl} alt={name} width={200} />}
           <p>{description}</p>
-          <p><strong>위치:</strong> {location}</p>
         </li>
       ))}
     </ul>
   );
 }
-export {};
