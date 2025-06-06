@@ -4,13 +4,13 @@ import PlaceInformation from "./pages/PlaceInformation";
 import Planning from "./pages/Planning";
 import SpotDetail from "./pages/SpotDetail";
 
-function App() {
+export default function RoutesSetup() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/planning" element={<Planning />} />
-      <Route path="/placeInformation" element={<PlaceInformation />} />
+      <Route index element={<Home/>}/>
+      <Route path="/planning" element={<Planning/>}/>
+      <Route path="/placeInformation" element={<PlaceInformation/>}/>
       <Route path="/spot/:id" element={<SpotDetail />} />
     </Routes>
-  );
+  )
 }
