@@ -10,7 +10,7 @@ export default function RoutesSetup() {
       <Route index element={<Home/>}/>
       <Route path="/planning" element={<Planning/>}/>
       <Route path="/placeInformation" element={<PlaceInformation/>}/>
-      <Route path="/spot/:id" element={<SpotDetail />} />
+      <Route path="/spotdetail/:id" element={<SpotDetail />} />
     </Routes>
   )
 }
