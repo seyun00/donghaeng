@@ -1,6 +1,11 @@
 import React from 'react';
+import AccommodationDetail, { RoomInfo } from '../tools/details/AccommodationDetail';
+import RestaurantDetail from '../tools/details/RestaurantDetail';
+import TouristSpotDetail from '../tools/details/TouristSpotDetail';
+import EventDetail from '../tools/details/EventDetail';
+import DefaultDetail from '../tools/details/DefaultDetail';
 
-// 타입 정의
+// 공통 정보 타입 정의
 interface CommonInfo {
   title: string;
   overview?: string;
@@ -10,84 +15,57 @@ interface CommonInfo {
   firstimage?: string;
 }
 
-interface IntroInfo {
-  accomcountlodging?: string;
-  checkintime?: string;
-  checkouttime?: string;
-  roomcount?: string;
-  parkinglodging?: string;
-  infocenterlodging?: string;
-  scale?: string;
-  subfacility?: string;
-}
-
-interface RoomInfo {
-  roomtitle: string;
-  roomcount: string;
-  roomsize1: string;
-  roomoffseasonminfee1: string;
-  roompeakseasonminfee1: string;
-  roomintro?: string;
-}
-
+// TourDetail 컴포넌트의 Props 타입 정의
 interface TourDetailProps {
+  contentTypeId: number;
   common: CommonInfo;
-  intro?: IntroInfo;
-  rooms?: RoomInfo[];
+  intro: any; // 다양한 타입의 소개 정보가 올 수 있으므로 any로 지정
+  rooms?: RoomInfo[]; // 객실 정보는 숙박 타입에만 해당
 }
 
-const TourDetail: React.FC<TourDetailProps> = ({ common, intro, rooms }) => {
+// 상세 정보 컴포넌트를 선택하는 헬퍼 함수
+const renderDetail = (props: TourDetailProps) => {
+  switch (props.contentTypeId) {
+    case 12: // 관광지
+      return <TouristSpotDetail intro={props.intro} />;
+    case 15: // 행사/공연/축제
+      return <EventDetail intro={props.intro} />;
+    case 32: // 숙박
+      return <AccommodationDetail intro={props.intro} rooms={props.rooms} />;
+    case 39: // 음식점
+      return <RestaurantDetail intro={props.intro} />;
+    default:
+      // 문화시설, 여행코스, 레포츠, 쇼핑 등은 기본 정보만 표시
+      return <DefaultDetail intro={props.intro} />;
+  }
+};
+
+const TourDetail: React.FC<TourDetailProps> = (props) => {
+  const { common } = props;
+
   return (
     <div className="p-6 bg-white rounded-xl shadow space-y-6">
-      {/* 공통 정보 */}
+      {/* 공통 정보 (모든 타입에 공통으로 표시) */}
       <div>
         <h2 className="text-2xl font-bold">{common.title}</h2>
         <p className="text-gray-600">{common.addr1}</p>
         {common.firstimage && (
           <img src={common.firstimage} alt={common.title} className="w-full h-64 object-cover mt-4 rounded-md" />
         )}
-        <p className="mt-4 text-gray-700">{common.overview}</p>
+        <div className="mt-4 text-gray-700" dangerouslySetInnerHTML={{ __html: common.overview || '' }} />
         {common.homepage && (
-          <a href={common.homepage} className="text-blue-600 underline mt-2 block" target="_blank" rel="noopener noreferrer">
-            홈페이지 바로가기
-          </a>
+          <div
+            className="text-blue-600 underline mt-2 block"
+            dangerouslySetInnerHTML={{ __html: common.homepage }}
+          />
         )}
       </div>
 
-      {/* 소개 정보 */}
-      {intro && (
-        <div>
-          <h3 className="text-xl font-semibold mt-6">숙소 소개</h3>
-          <ul className="mt-2 text-sm text-gray-700 space-y-1">
-            <li>총 수용 인원: {intro.accomcountlodging}</li>
-            <li>객실 수: {intro.roomcount}</li>
-            <li>체크인: {intro.checkintime}</li>
-            <li>체크아웃: {intro.checkouttime}</li>
-            <li>주차 가능 여부: {intro.parkinglodging}</li>
-            <li>건물 규모: {intro.scale}</li>
-            <li>부대시설: {intro.subfacility}</li>
-          </ul>
-        </div>
-      )}
+      <hr/>
 
-      {/* 반복 정보 */}
-      {rooms && rooms.length > 0 && (
-        <div>
-          <h3 className="text-xl font-semibold mt-6">객실 정보</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            {rooms.map((room, idx) => (
-              <div key={idx} className="border rounded-lg p-4 shadow-sm">
-                <h4 className="font-bold">{room.roomtitle}</h4>
-                <p>면적: {room.roomsize1}</p>
-                <p>객실 수: {room.roomcount}</p>
-                <p>비수기 요금: {room.roomoffseasonminfee1}원</p>
-                <p>성수기 요금: {room.roompeakseasonminfee1}원</p>
-                {room.roomintro && <p className="text-sm mt-1 text-gray-600">{room.roomintro}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* 콘텐츠 타입에 따라 다른 상세 정보 렌더링 */}
+      {props.intro && renderDetail(props)}
+      
     </div>
   );
 };

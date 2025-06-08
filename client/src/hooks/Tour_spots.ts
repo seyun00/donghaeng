@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FetchTourSpots, TouristSpot } from '../api/FetchTourApi';
+import { FetchTourSpots } from '../api/FetchTourApi';
 
 export function useTouristSpots(areaCode: number, contentsType: number) {
   const [spots, setSpots] = useState<TouristSpot[]>([]);  // 관광지 데이터
@@ -19,5 +19,13 @@ export function useTouristSpots(areaCode: number, contentsType: number) {
   return { spots, loading, error }; // 상태값 반환
 }
 
+export interface TouristSpot {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  location: string;
+  contentTypeId: string; 
+}
 export {};
       

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTouristSpots } from "../hooks/Tour_spots";
 import SearchInput from "../tools/Search_Input";
 import TouristSpotList from "../tools/Tour_list";
@@ -10,6 +10,8 @@ import { Area } from "../components/AreaButton";
 import { FetchAreaCode } from "../api/FetchTourApi";
 
 export default function PlaceInformation() {
+  const navigate = useNavigate();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [areaCode, setAreaCode] = useState(1);
   const [contentsType, setContentsType] = useState(12);
@@ -23,18 +25,26 @@ export default function PlaceInformation() {
   );
 
   const totalPages = Math.ceil(filteredSpots.length / itemsPerPage);
-  const currentSpots = filteredSpots.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
+  
   useEffect(() => {
     FetchAreaCode().then(setAreaList);
   }, []);
 
-  useEffect(() => {
-    setCurrentPage(1); // 지역 또는 콘텐츠 타입 변경 시 페이지 초기화
-  }, [areaCode, contentsType, searchQuery]);
+  // 지역/카테고리/검색 변경 시 항상 첫 페이지 기준으로 필터링
+  const currentSpots = filteredSpots.slice(0, itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    const nextSpots = filteredSpots.slice(
+      (page - 1) * itemsPerPage,
+      page * itemsPerPage
+    );
+
+    const firstSpot = nextSpots[0];
+
+    if (firstSpot && firstSpot.id && firstSpot.contentTypeId) {
+      navigate(`/detail/${firstSpot.id}/${firstSpot.contentTypeId}`);
+    }
+  };
 
   return (
     <div>

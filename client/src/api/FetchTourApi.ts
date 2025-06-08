@@ -7,6 +7,7 @@ export interface TouristSpot {
   description: string;
   imageUrl: string;
   location: string;
+  contentTypeId: string; 
 }
 
 // 지역 기반 관광정보 조회
@@ -43,6 +44,7 @@ export async function FetchTourSpots(areaCode: number, contentsType: number): Pr
     description: item.addr1 || '설명 없음',
     imageUrl: item.firstimage || '',
     location: item.addr1 || '위치 정보 없음',
+    contentTypeId: item.contenttypeid?.toString() || '', 
   }));
 }
 
