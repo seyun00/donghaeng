@@ -1,49 +1,24 @@
 import React from 'react';
+import GenericDetail from './GenericDetail';
 
-// 숙박 소개 정보 타입
-interface IntroInfo {
-  accomcountlodging?: string;
-  checkintime?: string;
-  checkouttime?: string;
-  roomcount?: string;
-  parkinglodging?: string;
-  scalelodging?: string; // API 필드명에 맞게 수정 (scale -> scalelodging)
-  subfacility?: string;
-}
-
-// 객실 정보 타입
 export interface RoomInfo {
   roomtitle: string;
   roomcount: string;
   roomsize1: string;
   roomoffseasonminfee1: string;
-  roompeakseasonminfee1: string;
+  roompeakseasonminfee1:string;
   roomintro?: string;
 }
 
 interface AccommodationDetailProps {
-  intro?: IntroInfo;
+  intro?: any;
   rooms?: RoomInfo[];
 }
 
 const AccommodationDetail: React.FC<AccommodationDetailProps> = ({ intro, rooms }) => {
   return (
-    <div>
-      {/* 소개 정보 */}
-      {intro && (
-        <div>
-          <h3 className="text-xl font-semibold mt-6">숙소 소개</h3>
-          <ul className="mt-2 text-sm text-gray-700 space-y-1">
-            {intro.accomcountlodging && <li>총 수용 인원: {intro.accomcountlodging}</li>}
-            {intro.roomcount && <li>객실 수: {intro.roomcount}</li>}
-            {intro.checkintime && <li>체크인: {intro.checkintime}</li>}
-            {intro.checkouttime && <li>체크아웃: {intro.checkouttime}</li>}
-            {intro.parkinglodging && <li>주차 가능 여부: {intro.parkinglodging}</li>}
-            {intro.scalelodging && <li>건물 규모: {intro.scalelodging}</li>}
-            {intro.subfacility && <li>부대시설: {intro.subfacility}</li>}
-          </ul>
-        </div>
-      )}
+    <>
+      <GenericDetail intro={intro} title="숙소 소개" />
 
       {/* 반복 정보 (객실) */}
       {rooms && rooms.length > 0 && (
@@ -63,7 +38,7 @@ const AccommodationDetail: React.FC<AccommodationDetailProps> = ({ intro, rooms 
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
