@@ -7,19 +7,32 @@ import Pagination from "../components/Pagination";
 import AreaButton from "../components/AreaButton";
 import ContentsTypeButton, { contentsTypeList } from "../components/ContentsTypeButton";
 import { Area } from "../components/AreaButton";
-import { FetchAreaCode } from "../api/FetchTourApi";
+import SigunguButton, { Sigungu } from "../components/SigunguButton";
+import { FetchAreaCode, FetchSigunguCode } from "../api/FetchTourApi";
 
 export default function PlaceInformation() {
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [areaCode, setAreaCode] = useState(1);
-  const [contentsType, setContentsType] = useState(12);
+
+  const [currentAreaCode, setCurrentAreaCode] = useState(1);
+  const [areaSelected, setAreaSelected] = useState(false);
+  const [currentSigunguCode, setCurrentSigunguCode] = useState(1);
+  const [sigunguSelected, setSigunguSelected] = useState(false);
+
+  const [currentContentsType, setCurrentContentsType] = useState(12);
   const [areaList, setAreaList] = useState<Area[]>([]);
+  const [sigunguList, setSigunguList] = useState<Sigungu[]>([]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const { spots, loading, error } = useTouristSpots(areaCode, contentsType);
+  const { spots, loading, error } = useTouristSpots(
+    currentAreaCode, 
+    currentContentsType, 
+    sigunguSelected ? currentSigunguCode : undefined
+  );
+
   const filteredSpots = spots.filter(spot =>
     spot.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -29,6 +42,13 @@ export default function PlaceInformation() {
   useEffect(() => {
     FetchAreaCode().then(setAreaList);
   }, []);
+
+  useEffect(() => {
+    if (currentAreaCode && areaSelected) {
+      FetchSigunguCode(currentAreaCode).then(setSigunguList);
+      setSigunguSelected(false)
+    }
+  }, [currentAreaCode]);
 
   // 지역/카테고리/검색 변경 시 항상 첫 페이지 기준으로 필터링
   const currentSpots = filteredSpots.slice(0, itemsPerPage);
@@ -59,10 +79,29 @@ export default function PlaceInformation() {
           <AreaButton
             key={item.id}
             area={item}
-            onClick={() => setAreaCode(item.areaCode)}
+            onClick={() => {
+              setCurrentAreaCode(item.areaCode)
+              setAreaSelected(true)
+            }}
           />
         ))}
       </div>
+
+      {areaSelected && 
+        <div>
+          시군구선택 :  {sigunguList.map(item => (
+            <SigunguButton
+              key={item.id}
+              sigungu={item}
+              onClick={() => {
+                setCurrentSigunguCode(item.sigunguCode) 
+                setSigunguSelected(true)
+              }}
+            />
+          ))}
+        </div>
+      }
+      <br />
 
       <div>
         카테고리 선택 :
@@ -71,7 +110,7 @@ export default function PlaceInformation() {
             key={item.typeID}
             typeID={item.typeID}
             typeName={item.typeName}
-            onClick={() => setContentsType(item.typeID)}
+            onClick={() => setCurrentContentsType(item.typeID)}
           />
         ))}
       </div>

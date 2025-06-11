@@ -39,14 +39,21 @@ export interface TouristSpot {
   contentTypeId: string; 
 }
 
-export async function FetchTourSpots(areaCode: number, contentsType: number): Promise<TouristSpot[]> {
-  const data = await apiClient('areaBasedList1', {
+export async function FetchTourSpots(areaCode: number, contentsType: number, sigunguCode?: number): Promise<TouristSpot[]> {
+  const params: Record<string, string> = {
     numOfRows: '10',
     pageNo: '1',
     arrange: 'B',
     contentTypeId: contentsType.toString(),
     areaCode: areaCode.toString(),
-  });
+  };
+
+  // 시군구 코드가 있으면 추가
+  if (sigunguCode) {
+    params.sigunguCode = sigunguCode.toString();
+  }
+  const data = await apiClient('areaBasedList1', params);
+  
   const items = data.response?.body?.items?.item ?? [];
   return items.map((item: any) => ({
     id: item.contentid,
@@ -59,12 +66,29 @@ export async function FetchTourSpots(areaCode: number, contentsType: number): Pr
 }
 
 export async function FetchAreaCode() {
-  const data = await apiClient('areaCode1', { numOfRows: '20', pageNo: '1' });
+  const data = await apiClient('areaCode1', {
+    numOfRows: '20', 
+    pageNo: '1' 
+  });
   const items = data.response?.body?.items?.item ?? [];
   return items.map((item: any) => ({
     id: item.rnum,
     areaCode: item.code,
     areaName: item.name,
+  }));
+}
+
+export async function FetchSigunguCode(areaCode:number) {
+  const data = await apiClient('areaCode1', { 
+    numOfRows: '50', 
+    pageNo: '1', 
+    areaCode: areaCode.toString() 
+  });
+  const items = data.response?.body?.items?.item ?? [];
+  return items.map((item: any) => ({
+    id: item.rnum,
+    sigunguCode: item.code,
+    sigunguName: item.name,
   }));
 }
 
