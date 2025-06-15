@@ -8,10 +8,9 @@ import AreaButton from "../components/AreaButton";
 import ContentsTypeButton, { contentsTypeList } from "../components/ContentsTypeButton";
 import { Area } from "../components/AreaButton";
 import SigunguButton, { Sigungu } from "../components/SigunguButton";
-import { FetchAreaCode, FetchSigunguCode } from "../api/FetchTourApi";
+import { FetchAreaCode, FetchSigunguCode, TouristSpot } from "../api/FetchTourApi";
 
 export default function PlaceInformation() {
-  const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -50,25 +49,28 @@ export default function PlaceInformation() {
     }
   }, [currentAreaCode]);
 
-  // 지역/카테고리/검색 변경 시 항상 첫 페이지 기준으로 필터링
-  const currentSpots = filteredSpots.slice(0, itemsPerPage);
-
-  const handlePageChange = (page: number) => {
-    const nextSpots = filteredSpots.slice(
-      (page - 1) * itemsPerPage,
-      page * itemsPerPage
+  // 현재 페이지 기준 itemsPerPage 개수만큼 장소 리스트 출력
+  const [currentSpots, setCurrentSpots] = useState<TouristSpot[]>([]);
+  
+  useEffect(() => {
+    const spots = filteredSpots.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
     );
+    setCurrentSpots(spots);
+  }, [filteredSpots, currentPage, itemsPerPage]);
 
-    const firstSpot = nextSpots[0];
-
-    if (firstSpot && firstSpot.id && firstSpot.contentTypeId) {
-      navigate(`/detail/${firstSpot.id}/${firstSpot.contentTypeId}`);
-    }
-  };
+  useEffect(() => {
+    window.scrollTo({ top: 0});
+  }, [currentPage]);
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, currentAreaCode, currentContentsType, currentSigunguCode]);
 
   return (
     <div>
-      <h1>관광지 정보 페이지</h1>
+      <h1>장소 정보 페이지</h1>
       <Link to="/"><button>홈으로</button></Link>
 
       <SearchInput value={searchQuery} onChange={setSearchQuery} />
@@ -118,12 +120,17 @@ export default function PlaceInformation() {
       {loading && <p>로딩 중...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
+      {!loading && !error && 
+        <p> 총 {filteredSpots.length}개의 장소가 검색되었습니다.</p>
+      }
+
       <TouristSpotList spots={currentSpots} />
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
+      
     </div>
   );
 }

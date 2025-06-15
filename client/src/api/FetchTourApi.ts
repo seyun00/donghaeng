@@ -9,7 +9,7 @@ async function apiClient(operation: string, additionalParams: Record<string, str
   const baseParams = {
     serviceKey: decodedKey,
     MobileOS: 'ETC',
-    MobileApp: 'TourApp', // 실제 서비스명으로 변경하는 것을 권장합니다.
+    MobileApp: 'TourApp',
     _type: 'json',
   };
 
@@ -41,7 +41,7 @@ export interface TouristSpot {
 
 export async function FetchTourSpots(areaCode: number, contentsType: number, sigunguCode?: number): Promise<TouristSpot[]> {
   const params: Record<string, string> = {
-    numOfRows: '10',
+    numOfRows: '10000',
     pageNo: '1',
     arrange: 'B',
     contentTypeId: contentsType.toString(),
