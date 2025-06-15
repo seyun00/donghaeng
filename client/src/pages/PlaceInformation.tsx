@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTouristSpots } from "../hooks/Tour_spots";
 import SearchInput from "../tools/Search_Input";
@@ -32,9 +32,12 @@ export default function PlaceInformation() {
     sigunguSelected ? currentSigunguCode : undefined
   );
 
-  const filteredSpots = spots.filter(spot =>
+  const filteredSpots = useMemo(
+  () => spots.filter(spot => 
     spot.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ),
+  [spots, searchQuery] // spots, searchQuery 값이 바뀔 경우에만 filteredSpots 수정
+);
 
   const totalPages = Math.ceil(filteredSpots.length / itemsPerPage);
   
