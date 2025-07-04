@@ -10,17 +10,22 @@ export default function TouristSpotList({ spots }: TouristSpotListProps) {
 
   return (
     <ul>
-      {/* map에서 contentTypeId도 함께 받아옵니다. */}
       {spots.map(({ id, name, imageUrl, description, contentTypeId }) => (
         <li key={id}>
-          {/* Link의 to 속성을 수정하여 id와 contentTypeId를 모두 전달합니다. */}
-          <Link to={`/detail/${id}/${contentTypeId}`}>
+          {/* Link -> a 태그로 변경하고 target="_blank" 추가 */}
+          <a
+            href={`/detail/${id}/${contentTypeId}`}
+            target="_blank"
+            rel="noopener noreferrer" // 보안을 위해 rel 속성을 추가하는 것이 좋습니다.
+          >
             <h3>{name}</h3>
-          </Link>
+          </a>
           {imageUrl && <img src={imageUrl} alt={name} width={200} />}
           <p>{description}</p>
         </li>
       ))}
     </ul>
   );
+}interface TouristSpotListProps {
+  spots: TouristSpot[];
 }
