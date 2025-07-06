@@ -5,6 +5,7 @@ import Planning from "./pages/Planning";
 import TourDetailPage from "./pages/TourDetailPage";
 import HeaderPage from "./HeaderPage";
 import Signup from "./pages/Signup";
+import Signin from "./pages/Signin";
 
 export default function RoutesSetup() {
   return (
@@ -12,6 +13,7 @@ export default function RoutesSetup() {
       <Route path="/" element={<HeaderPage/>}>
         <Route index element={<Home/>}/>
         <Route path="signup" element={<Signup/>}/>
+        <Route path="signin" element={<Signin/>}/>
       </Route>
       <Route path="/planning" element={<Planning/>}/>
       <Route path="/placeInformation" element={<PlaceInformation/>}/>
