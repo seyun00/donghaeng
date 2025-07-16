@@ -8,7 +8,9 @@ export default function Signup() {
   const usernameRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
 
-  const handleSignupBtn = async () => {
+  const handleSignupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     const email = emailRef.current?.value || "";
     const password = passwordRef.current?.value || "";
     const passwordCheck = passwordCheckRef.current?.value || "";
@@ -28,7 +30,7 @@ export default function Signup() {
       email,
       password,
       options: {
-        data: { username },
+        data: { nickname: username },
       },
     });
 
@@ -36,22 +38,14 @@ export default function Signup() {
       setMessage(`회원가입 실패: ${error.message}`);
       return;
     } else {
-      setMessage("회원가입 성공!");
+      setMessage("인증 메일이 발송되었습니다.");
     }
 
-    // user 테이블에 추가 정보 저장
-    const userData = await supabase.from("user").insert({
-      id: data.user?.id,
-      email: data.user?.email,
-      created_at: data.user?.created_at,
-      nickname: username,
-    });
-
-    console.log(userData);
   };
 
   return (
     <>
+    <form onSubmit={handleSignupSubmit}>
       <div>
         <input type="email" placeholder="이메일" ref={emailRef} />
       </div>
@@ -64,7 +58,10 @@ export default function Signup() {
       <div>
         <input type="text" placeholder="사용자 이름" ref={usernameRef} />
       </div>
-      <button onClick={handleSignupBtn}>회원가입</button>
+      <div>
+        <input type="submit" value="회원가입"/>
+      </div>
+    </form>
       {message && <div>{message}</div>}
     </>
   );

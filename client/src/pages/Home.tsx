@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom"
-import supabase from "../api/supabaseClient"
+import { Link } from "react-router-dom";
+import supabase from "../api/supabaseClient";
 import useSession from "../hooks/useSesstion";
 import { useEffect, useState } from "react";
 

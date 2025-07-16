@@ -9,7 +9,9 @@ export default function Signin() {
   
   const navigate = useNavigate();
 
-  const handleSigninBtn = async () => {
+  const handleSigninSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     const email = emailRef.current?.value || "";
     const password = passwordRef.current?.value || "";
 
@@ -31,9 +33,11 @@ export default function Signin() {
 
   return (
     <>
+      <form onSubmit={handleSigninSubmit}>
       <div><input type="text" placeholder="이메일" ref={emailRef}/></div>
       <div><input type="password" placeholder="비밀번호" ref={passwordRef}/></div>
-      <button onClick={handleSigninBtn}>로그인</button>
+      <div><input type="submit" value="로그인"/></div>
+      </form>
       {message && <div>{message}</div>}
     </>
   )
