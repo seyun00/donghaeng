@@ -49,6 +49,16 @@ export default function Signin() {
     }  
   }
 
+  const handleSigninKakao = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+    });
+    if (error) {
+      console.error("카카오 로그인 실패: ", error.message);
+      return;
+    }  
+  }
+
   return (
     <>
       <form onSubmit={handleSigninSubmit}>
@@ -58,7 +68,7 @@ export default function Signin() {
       </form>
       <div>
         <button onClick={handleSigninGoogle}>GOOGLE</button>
-        <button>KAKAO</button>
+        <button onClick={handleSigninKakao}>KAKAO</button>
         <button>NAVER</button>
       </div>
       {message && <div>{message}</div>}
