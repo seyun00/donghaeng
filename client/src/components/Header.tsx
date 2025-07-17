@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import supabase from "../api/supabaseClient";
 import useSession from "../hooks/useSesstion";
+import { useNavigate } from "react-router-dom";
 
 export default function Header() {
-  
+  const navigate = useNavigate();
   const isLogin = useSession();
 
   const handleSignout = async () => {
     if (window.confirm("로그아웃하시겠습니까?")) {
       try {
         await supabase.auth.signOut();
+        navigate("/");
       } catch (error) {
         console.log(error);
       }

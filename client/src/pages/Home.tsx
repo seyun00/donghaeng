@@ -25,9 +25,9 @@ export default function Home() {
         return;
       }
       // user 테이블에서 닉네임 조회
-      console.log(user.id)
+      // console.log(user.id)
       const { data: userData, error: userError } = await supabase
-        .from("user") 
+        .from("userinfo") 
         .select("nickname")
         .eq("id", user.id)
         .single();

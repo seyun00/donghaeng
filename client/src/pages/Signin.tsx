@@ -9,6 +9,7 @@ export default function Signin() {
   
   const navigate = useNavigate();
 
+  // 일반 로그인
   const handleSigninSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -31,6 +32,17 @@ export default function Signin() {
     
   };
 
+  // 구글 로그인
+  const handleSigninGoogle = async () => {
+    const { data, error} = await supabase.auth.signInWithOAuth({
+      provider:'google'
+    });
+    if (error) {
+      console.error("구글 로그인 실패: ", error.message);
+      return;
+    }  
+  }
+
   return (
     <>
       <form onSubmit={handleSigninSubmit}>
@@ -38,6 +50,11 @@ export default function Signin() {
       <div><input type="password" placeholder="비밀번호" ref={passwordRef}/></div>
       <div><input type="submit" value="로그인"/></div>
       </form>
+      <div>
+        <button onClick={handleSigninGoogle}>GOOGLE</button>
+        <button>KAKAO</button>
+        <button>NAVER</button>
+      </div>
       {message && <div>{message}</div>}
     </>
   )
