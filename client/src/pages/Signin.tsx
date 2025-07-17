@@ -34,9 +34,15 @@ export default function Signin() {
 
   // 구글 로그인
   const handleSigninGoogle = async () => {
-    const { data, error} = await supabase.auth.signInWithOAuth({
-      provider:'google'
-    });
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
+    })
     if (error) {
       console.error("구글 로그인 실패: ", error.message);
       return;
