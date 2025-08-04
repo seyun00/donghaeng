@@ -65,6 +65,9 @@ export default function Home() {
       <Link to="/placeInformation">
         <button>관광지 정보 페이지</button>
       </Link>
+      <Link to="/plans">
+          <button>내 일정 관리</button>
+        </Link>
     </>
   )
 }
