@@ -47,24 +47,21 @@ export default function Home() {
 
   return (
     <>
-      <h1>메인 페이지</h1>
+      <div className="text-[50px] text-center">메인 페이지</div>
       {!loading &&
-      <div style={{ marginBottom: "20px" }}>
-        {isLogin ? (
-          <span style={{ color: "green" }}>
-            {nickname}님, 환영합니다!
+        <div className="mb-5 text-center">
+          {isLogin ? (
+            <span className="text-green-600">
+              {nickname}님, 환영합니다!
             </span>
-        ) : (
-          <span style={{ color: "red" }}>로그인이 필요합니다.</span>
-        )}
-      </div>
+          ) : (
+            <span className="text-red-600">로그인이 필요합니다.</span>
+          )}
+        </div>
       }
-      <Link to="/planning">
-        <button>여행 계획 페이지</button>
-      </Link>
-      <Link to="/placeInformation">
-        <button>관광지 정보 페이지</button>
-      </Link>
+      
+      <div className="text-center"><Link to="/planning">여행 계획 페이지</Link></div>
+      <div className="text-center"><Link to="/placeInformation">관광지 정보 페이지</Link></div>
     </>
   )
 }
