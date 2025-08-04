@@ -19,25 +19,27 @@ export default function Header() {
   }
 
   return (
-    <div className="py-[10px] px-[20px] border-b-2 border-black flex justify-between">
-      <Link to="/" className="font-bold">동행</Link>
-      
-      <div>
-        {!isLogin ? (
-          <>
-            <Link to="/signin" className="">
-              <button className="mr-4">로그인</button>
-            </Link>
-            <Link to="/signup">
-              <button>회원가입</button>
-            </Link>
-          </>
-        ) : (
-          <>
-            <button onClick={handleSignout} className="mr-4">로그아웃</button>
-            <button>내 정보</button>
-          </>
-        )}
+    <div className="border-b-2 border-gray-100">
+      <div className="py-[10px] px-[20px] flex justify-between max-w-[1024px] m-auto">
+        <Link to="/">동행</Link>
+        
+        <div>
+          {!isLogin ? (
+            <>
+              <Link to="/signin">
+                <button className="mr-4">로그인</button>
+              </Link>
+              <Link to="/signup">
+                <button>회원가입</button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <button onClick={handleSignout} className="mr-4">로그아웃</button>
+              <Link to="/mypage"><button>내 정보</button></Link>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
