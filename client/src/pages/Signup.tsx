@@ -44,25 +44,30 @@ export default function Signup() {
   };
 
   return (
-    <>
-    <form onSubmit={handleSignupSubmit}>
-      <div>
-        <input type="email" placeholder="이메일" ref={emailRef} />
+    <div className="h-[100vh] bg-gray-100 pt-10">
+      <div className="max-w-[1024px] m-auto bg-white h-[70vh] pt-10">
+        <div className="text-[30px] text-center font-medium py-[20px]">회원가입</div>
+
+        <form onSubmit={handleSignupSubmit}>
+          <div className="m-auto max-w-[300px] px-[15px] py-[8px] rounded-[25px] bg-gray-100 mb-2">
+            <input type="email" placeholder="이메일" ref={emailRef} className="w-full bg-transparent focus:outline-none"/>
+          </div>
+          <div className="m-auto max-w-[300px] px-[15px] py-[8px] rounded-[25px] bg-gray-100 mb-2">
+            <input type="password" placeholder="비밀번호" ref={passwordRef} className="w-full bg-transparent focus:outline-none"/>
+          </div>
+          <div className="m-auto max-w-[300px] px-[15px] py-[8px] rounded-[25px] bg-gray-100 mb-2">
+            <input type="password" placeholder="비밀번호 확인" ref={passwordCheckRef} className="w-full bg-transparent focus:outline-none"/>
+          </div>
+          <div className="m-auto max-w-[300px] px-[15px] py-[8px] rounded-[25px] bg-gray-100 mb-2">
+            <input type="text" placeholder="사용자 이름" ref={usernameRef} className="w-full bg-transparent focus:outline-none" />
+          </div>
+          <div className="m-auto max-w-[300px] px-[15px] py-[8px] rounded-[25px] bg-gray-100 mb-2 hover:bg-gray-200">
+            <input type="submit" value="회원가입" className="w-full text-center"/>
+          </div>
+        </form>
+
+        {message && <div className="m-auto max-w-[300px] text-center">{message}</div>}
       </div>
-      <div>
-        <input type="password" placeholder="비밀번호" ref={passwordRef} />
-      </div>
-      <div>
-        <input type="password" placeholder="비밀번호 확인" ref={passwordCheckRef} />
-      </div>
-      <div>
-        <input type="text" placeholder="사용자 이름" ref={usernameRef} />
-      </div>
-      <div>
-        <input type="submit" value="회원가입"/>
-      </div>
-    </form>
-      {message && <div>{message}</div>}
-    </>
+    </div>
   );
 }

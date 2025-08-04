@@ -66,7 +66,6 @@ export default function Signin() {
         <div className="text-[30px] text-center font-medium py-[20px]">로그인</div>
         
         <form onSubmit={handleSigninSubmit}>
-          
           <div className="m-auto max-w-[300px] px-[15px] rounded-[25px] ">아이디(이메일)</div>
           <div className="m-auto max-w-[300px] px-[15px] py-[8px] rounded-[25px] bg-gray-100 mb-2">
             <input type="text" ref={emailRef} className="w-full bg-transparent focus:outline-none"/>
