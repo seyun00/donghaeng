@@ -25,6 +25,7 @@ export default function Signin() {
     if (error) {
       setMessage(`로그인 실패: ${error.message}`);
     } else {
+      alert("로그인에 성공했습니다.");
       navigate("/");
     }
     
