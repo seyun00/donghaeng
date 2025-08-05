@@ -25,10 +25,7 @@ export default function Signin() {
     if (error) {
       setMessage(`로그인 실패: ${error.message}`);
     } else {
-      setMessage("로그인 성공!! 3초 후 홈으로 이동합니다.");
-      setTimeout(() => {
-        navigate("/");
-      }, 3000);
+      navigate("/");
     }
     
   };
