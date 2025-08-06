@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import supabase from "../api/supabaseClient";
 import { useNavigate } from "react-router-dom";
+import AddFriendModal from "../components/AddFriendModal";
+
 export default function MyPage () {
-  const [menu, setMenu] = useState<String>("edit_info");
+  const [menu, setMenu] = useState<string>("edit_info");
   
-  const [userId, setUserId] = useState<String>("");
-  const [nickName, setNickName] = useState("");
+  const [userId, setUserId] = useState<string>("");
+  const [nickName, setNickName] = useState<string>("");
   const [email, setEmail] = useState("");
   const [profileUrl, setProfileUrl] = useState<string | null>(null);
   const [isSocialLogin, setIsSocialLogin] = useState(false);
@@ -44,7 +46,8 @@ export default function MyPage () {
         console.log(userError)
         return;
       }
-      setEmail(userData.email);
+      const email_asterisk = userData.email.slice(0,6)+'*'.repeat(6);
+      setEmail(email_asterisk);
       setNickName(userData.nickname);
       setProfileUrl(userData.profile_url);
       setLoading(false);
@@ -135,6 +138,81 @@ export default function MyPage () {
     alert("프로필 이미지가 성공적으로 변경되었습니다.");
   };
 
+  // 친구 리스트 불러오기
+  type Friend = {
+    id: string;
+    email: string;
+    nickname: string;
+  };
+  
+  const [friendsList, setFriendsList] = useState<Friend[]>([]);
+
+  const fetchFriends = async () => {
+    if (!userId) return;
+    
+    const { data, error } = await supabase
+      .from('friend_details')
+      .select('*')
+      .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+      .eq('status', 'accepted');
+    
+    if (error) {
+      console.error(error);
+      return;
+    }
+  
+    const friends = data.map(f => {
+      if (f.requester_id === userId) {
+        return {
+          id: f.addressee_id,
+          email: f.addressee_email,
+          nickname: f.addressee_nickname,
+        };
+      } else {
+        return {
+          id: f.requester_id,
+          email: f.requester_email,
+          nickname: f.requester_nickname,
+        };
+      }
+    });
+  
+    setFriendsList(friends);
+  };
+
+  const friendIds = friendsList.map(friend => friend.id); 
+
+  useEffect(() => {
+    if (userId) {
+      fetchFriends();
+    }
+  }, [userId]);
+
+  // 친구 추가 모달창
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleSendFriendRequest = async (targetUserId: string) => {
+    if (targetUserId === userId) {
+      alert("본인에게 친구 요청을 보낼 수 없습니다.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("friends")
+      .insert({
+        requester_id: userId,
+        addressee_id: targetUserId,
+        status: "pending",
+      });
+
+    if (error) {
+      alert("친구 요청 중 오류가 발생했습니다: " + error.message);
+    } else {
+      alert("친구 요청이 전송되었습니다.");
+      setModalOpen(false);
+    }
+  };
+
   return (
       <>
       {!loading &&
@@ -153,11 +231,11 @@ export default function MyPage () {
             {menu === "edit_info" && 
               <>
                 <div className="text-[32px]">회원정보 변경</div>
-                <div className="flex justify-between p-5 h-3/5">
+                <div className="flex justify-between py-5 h-3/5">
                   <div className="text-center">
                     <div className="inline-block w-[140px] h-[140px] bg-gray-100 rounded-[50%] text-center overflow-hidden relative">
                       {profileUrl ? (<img src={profileUrl} alt="프로필 이미지" className="w-full h-full object-cover rounded-[20px]"/>
-                      ) : (<span className="absolute text-gray-400 top-[60px] inset-0">이미지 없음</span>
+                      ) : (<span className="absolute text-gray-400 top-[50px] inset-0">등록된 사진이 <br />없습니다.</span>
                       )}
                       <input
                         type="file"
@@ -176,7 +254,7 @@ export default function MyPage () {
                           elem.click();
                         }
                       }}
-                      disabled={uploading}>프로필 사진 수정
+                      disabled={uploading}>사진 수정하기
                     </button>
                   </div>
                   <div className="w-full pr-10 ml-5 text-right">
@@ -199,10 +277,31 @@ export default function MyPage () {
               <div className="text-[32px]">내가 쓴 리뷰</div>
             }
             {menu === "edit_firends" && 
-              <div className="text-[32px]">친구 관리</div>
+              <div>
+                <h2 className="mb-4 text-2xl">친구 목록</h2>
+                <div>
+                  {friendsList.length === 0 && <p>등록된 친구가 없습니다.</p>}
+                  <ul className="max-h-[300px] bg-gray-100 overflow-auto">
+                    {friendsList.map(friend => (
+                      <li key={friend.id} className="flex items-center justify-between p-2 border-b-4 border-b-white">
+                        <div>
+                          <div><b>이름</b> {friend.nickname}</div>
+                          <div><b>이메일</b> {friend.email}</div>
+                        </div>
+                        <div>
+                          <button className="px-2 py-1 bg-white border rounded-[5px] hover:bg-gray-200">삭제</button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-2 text-right">
+                    <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-[10px]" onClick={() => setModalOpen(true)}>추가</button>
+                  </div>
+                  <AddFriendModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSendRequest={handleSendFriendRequest} currentUserId={userId} friendIds={friendIds}/>
+                </div>
+              </div>
             }
           </div>
-          
         </div>
       </div>
       }
