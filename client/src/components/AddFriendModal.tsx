@@ -55,12 +55,12 @@ export default function AddFriendModal({ isOpen, onClose, onSendRequest, current
             placeholder="이메일로 검색"
             value={searchEmail}
             onChange={(e) => setSearchEmail(e.target.value)}
-            className="w-[250px] p-2 mb-3 border rounded"
+            className="w-[250px] px-2 py-1 mb-3 border rounded focus:outline-none"
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
           <button
             onClick={handleSearch}
-            className="px-4 py-2 mb-4 text-white bg-blue-500 rounded hover:bg-blue-600"
+            className="px-2 py-1 mb-4 bg-gray-100 rounded-[5px] hover:bg-gray-200"
           >
             검색
           </button>

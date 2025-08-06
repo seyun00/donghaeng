@@ -91,6 +91,7 @@ export default function MyPage () {
     alert("회원정보가 성공적으로 수정되었습니다.");
   };
 
+  // 프로필 사진 수정
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files ? event.target.files[0] : null;
     if (!file) return;
@@ -188,29 +189,96 @@ export default function MyPage () {
     }
   }, [userId]);
 
-  // 친구 추가 모달창
+  // 친구 추가 모달창 기능
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleSendFriendRequest = async (targetUserId: string) => {
-    if (targetUserId === userId) {
-      alert("본인에게 친구 요청을 보낼 수 없습니다.");
-      return;
+    try {
+      if (targetUserId === userId) {
+        alert("본인에게 친구 요청을 보낼 수 없습니다.");
+        return;
+      }
+    
+      // 서로 중복 신청 방지를 위해, userId가 requester 또는 addressee인 경우 모두 탐색
+      const { data: existingRequest, error: fetchError } = await supabase
+        .from("friends")
+        .select("id, status, requester_id, addressee_id")
+        .or(
+          `and(requester_id.eq.${userId},addressee_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},addressee_id.eq.${userId})`
+        )
+        .maybeSingle();
+      
+      if (fetchError && fetchError.code !== "PGRST116") {
+        alert("친구 요청 상태 조회 중 오류가 발생했습니다: " + fetchError.message);
+        return;
+      }
+    
+      if (!existingRequest) {
+        // 신규 요청 삽입
+        const { error: insertError } = await supabase
+          .from("friends")
+          .insert({
+            requester_id: userId,
+            addressee_id: targetUserId,
+            status: "pending",
+          });
+        
+        if (insertError) {
+          alert("친구 요청 중 오류가 발생했습니다: " + insertError.message);
+        } else {
+          alert("친구 요청이 전송되었습니다.");
+          setModalOpen(false);
+        }
+      
+      } else {
+        const currentStatus = existingRequest.status;
+      
+        if (currentStatus === "rejected" || currentStatus === "deleted") {
+          // 기존 거부/삭제 상태면 상태 갱신
+          const { error: updateError } = await supabase
+            .from("friends")
+            .update({ status: "pending" })
+            .eq("id", existingRequest.id);
+        
+          if (updateError) {
+            alert("친구 요청 전송 중 오류가 발생했습니다: " + updateError.message);
+          } else {
+            alert("친구 요청이 전송되었습니다.");
+            setModalOpen(false);
+          }
+        } else if (currentStatus === "pending") {
+          alert("이미 친구 요청이 대기 중입니다.");
+        } else if (currentStatus === "accepted") {
+          alert("이미 친구인 상태입니다.");
+        } else {
+          alert(`현재 친구 요청 상태: ${currentStatus}`);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert("친구 요청 처리 중 알 수 없는 오류가 발생했습니다.");
     }
+  };
 
+  const handleDelete = async (friendUserId: string) => {
+    if (!window.confirm("이 친구를 삭제하시겠습니까?")) return;
+    
     const { error } = await supabase
       .from("friends")
-      .insert({
-        requester_id: userId,
-        addressee_id: targetUserId,
-        status: "pending",
-      });
-
+      .update({ status: "deleted" })
+      .or(
+        `and(requester_id.eq.${userId},addressee_id.eq.${friendUserId}),and(requester_id.eq.${friendUserId},addressee_id.eq.${userId})`
+      );
+    
     if (error) {
-      alert("친구 요청 중 오류가 발생했습니다: " + error.message);
-    } else {
-      alert("친구 요청이 전송되었습니다.");
-      setModalOpen(false);
+      alert("친구 삭제에 실패했습니다: " + error.message);
+      return;
     }
+  
+    alert("친구가 삭제되었습니다.");
+  
+    // 삭제 후 UI 갱신: 현재 friendUserId 제외
+    setFriendsList(prev => prev.filter(friend => friend.id !== friendUserId));
   };
 
   return (
@@ -289,13 +357,16 @@ export default function MyPage () {
                           <div><b>이메일</b> {friend.email}</div>
                         </div>
                         <div>
-                          <button className="px-2 py-1 bg-white border rounded-[5px] hover:bg-gray-200">삭제</button>
+                          <button 
+                          className="px-2 py-1 bg-white border rounded-[5px] hover:bg-gray-200"
+                          onClick={() => handleDelete(friend.id)}
+                          >삭제</button>
                         </div>
                       </li>
                     ))}
                   </ul>
                   <div className="mt-2 text-right">
-                    <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-[10px]" onClick={() => setModalOpen(true)}>추가</button>
+                    <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-[5px]" onClick={() => setModalOpen(true)}>추가</button>
                   </div>
                   <AddFriendModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSendRequest={handleSendFriendRequest} currentUserId={userId} friendIds={friendIds}/>
                 </div>
