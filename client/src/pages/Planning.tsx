@@ -74,74 +74,80 @@ export default function Planning() {
     return () => { supabase.removeChannel(channel); };
   }, [planId]);
 
-  // Naver 지도 초기화
-  useEffect(() => {
+// Naver 지도 초기화
+useEffect(() => {
+    // 1. 로딩 중일 때는 함수를 실행하지 않고 조기 종료
+    if (loading) return;
+
     const { naver } = window;
+    // 2. mapElement.current가 아직 없거나, naver API가 없거나, 이미 지도가 초기화된 경우 종료
     if (!mapElement.current || !naver || mapInstance.current) return;
     
     console.log("3. Naver 지도 초기화 시작");
     mapInstance.current = new naver.maps.Map(mapElement.current, {
-      center: new naver.maps.LatLng(37.5665, 126.9780),
-      zoom: 12,
+        center: new naver.maps.LatLng(37.5665, 126.9780),
+        zoom: 12,
     });
     console.log("4. Naver 지도 초기화 완료");
-  }, []);
 
+// 3. 'loading' 상태를 의존성 배열에 추가
+}, [loading]);
   // spots 목록이 변경될 때마다 지도에 마커 업데이트
   useEffect(() => {
-    // --- 에러 방지를 위한 try-catch 블록 추가 ---
     try {
-      const { naver } = window;
-      if (!mapInstance.current || !spots || !naver) {
-        console.log("마커 업데이트 건너뜀: 지도 또는 장소 목록이 준비되지 않음");
-        return;
-      }
-      
-      console.log("5. 마커 업데이트 시작, 장소 개수:", spots.length);
-      const map = mapInstance.current;
-      
-      markersRef.current.forEach(marker => marker.setMap(null));
-      
-      if (spots.length === 0) {
-        markersRef.current = [];
-        return;
-      }
-
-      const bounds = new naver.maps.LatLngBounds();
-
-      const fetchSpotDetailsAndCreateMarkers = async () => {
-        const newMarkers: any[] = [];
-        for (const spot of spots) {
-          const details = await FetchDetailCommonInfo(spot.tour_api_content_id, spot.content_type_id);
-          if (details && details.mapy && details.mapx) {
-            const position = new naver.maps.LatLng(details.mapy, details.mapx);
-            const marker = new naver.maps.Marker({
-              position: position,
-              map: map,
-              title: details.title
-            });
-            newMarkers.push(marker);
-            bounds.extend(position);
-          }
+        const { naver } = window;
+        if (!mapInstance.current || !spots || !naver) {
+            console.log("마커 업데이트 건너뜀: 지도 또는 장소 목록이 준비되지 않음");
+            return;
         }
         
-        markersRef.current = newMarkers;
+        console.log("5. 마커 업데이트 시작, 장소 개수:", spots.length);
+        const map = mapInstance.current;
         
-        if (!bounds.isEmpty()) {
-          map.updateBy(bounds);
-          if (map.getZoom() > 15) {
-            map.setZoom(15);
-          }
+        markersRef.current.forEach(marker => marker.setMap(null));
+        
+        if (spots.length === 0) {
+            markersRef.current = [];
+            return;
         }
-        console.log("6. 마커 업데이트 완료");
-      };
 
-      fetchSpotDetailsAndCreateMarkers();
+       
+        const bounds = new naver.maps.LatLngBounds();
+
+        const fetchSpotDetailsAndCreateMarkers = async () => {
+            const newMarkers: any[] = [];
+            for (const spot of spots) {
+                const details = await FetchDetailCommonInfo(spot.tour_api_content_id, spot.content_type_id);
+                if (details && details.mapy && details.mapx) {
+                    const position = new naver.maps.LatLng(details.mapy, details.mapx);
+                    const marker = new naver.maps.Marker({
+                        position: position,
+                        map: map,
+                        title: details.title
+                    });
+                    newMarkers.push(marker);
+                    bounds.extend(position);
+                }
+            }
+            
+            markersRef.current = newMarkers;
+
+            if (newMarkers.length > 0) {
+                map.updateBy(bounds);
+                if (map.getZoom() > 15) {
+                    map.setZoom(15);
+                }
+            }
+
+            console.log("6. 마커 업데이트 완료");
+        };
+
+        fetchSpotDetailsAndCreateMarkers();
     } catch (error) {
-      // 에러가 발생하더라도 페이지가 멈추지 않고 콘솔에 로그를 남깁니다.
-      console.error("마커를 그리는 중 심각한 에러 발생:", error);
+        console.error("마커를 그리는 중 심각한 에러 발생:", error);
     }
-  }, [spots]);
+}, [spots]);
+
 
   if (loading) return <p>여행 계획을 불러오는 중...</p>;
   if (!planId) return <div><p>표시할 여행 계획이 없습니다.</p><Link to="/">홈으로</Link></div>;
@@ -154,7 +160,14 @@ export default function Planning() {
       </header>
       <div style={{ display: 'flex', flex: 1, height: 'calc(100vh - 65px)' }}>
         <VisitListPanel spots={spots} planId={planId} />
-        <div ref={mapElement} style={{ flex: 1 }} />
+         <div 
+          ref={mapElement} 
+          style={{ 
+            flex: 1, 
+            width: '100%',
+            height: '100%'
+          }} 
+        />
         <div style={{ width: '350px', borderLeft: '1px solid #ddd', padding: '15px' }}>채팅창 영역</div>
       </div>
     </div>
