@@ -92,6 +92,7 @@ export async function FetchDetailCommonInfo(contentId: string, contentTypeId: st
     defaultYN: 'Y',
     firstImageYN: 'Y',
     overviewYN: 'Y',
+    mapinfoYN: 'Y',
   });
   return data.response?.body?.items?.item?.[0] || data.response?.body?.items?.item || null;
 }
