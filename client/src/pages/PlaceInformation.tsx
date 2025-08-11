@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
-// useSearchParams 훅을 import 합니다.
 import { Link, useSearchParams } from "react-router-dom";
 import { useTouristSpots } from "../hooks/Tour_spots";
 import SearchInput from "../tools/Search_Input";
 import TouristSpotList from "../tools/Tour_list";
 import Pagination from "../components/Pagination";
-import AreaButton from "../components/AreaButton";
+// import 변경
+import AreaButton, { Region } from "../components/AreaButton";
 import ContentsTypeButton, { contentsTypeList } from "../components/ContentsTypeButton";
-import { Area } from "../components/AreaButton";
 import SigunguButton, { Sigungu } from "../components/SigunguButton";
-import { FetchAreaCode, FetchSigunguCode } from "../api/FetchTourApi";
+// import 변경
+import { FetchLDongRegions, FetchLDongSigungus } from "../api/FetchTourApi";
 
 const formatDateForInput = (date: Date): string => {
   const year = date.getFullYear();
@@ -20,15 +20,16 @@ const formatDateForInput = (date: Date): string => {
 
 export default function PlaceInformation() {
   const [searchParams] = useSearchParams();
-  const planId = searchParams.get('planId'); 
+  const planId = searchParams.get('planId');
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentAreaCode, setCurrentAreaCode] = useState(1);
-  const [areaSelected, setAreaSelected] = useState(false);
-  const [currentSigunguCode, setCurrentSigunguCode] = useState(1);
+  //  상태 변수 이름 및 초기값 변경
+  const [currentRegionCode, setCurrentRegionCode] = useState<number | undefined>(11); // 서울특별시
+  const [regionSelected, setRegionSelected] = useState(false);
+  const [currentSigunguCode, setCurrentSigunguCode] = useState<number | undefined>();
   const [sigunguSelected, setSigunguSelected] = useState(false);
   const [currentContentsType, setCurrentContentsType] = useState(12);
-  const [areaList, setAreaList] = useState<Area[]>([]);
+  const [regionList, setRegionList] = useState<Region[]>([]);
   const [sigunguList, setSigunguList] = useState<Sigungu[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -36,27 +37,20 @@ export default function PlaceInformation() {
   const [eventStartDate, setEventStartDate] = useState(new Date());
   const [eventEndDate, setEventEndDate] = useState<Date | null>(null);
 
+  // useTouristSpots 훅 호출 파라미터 변경
   const { spots, loading, error } = useTouristSpots(
-    currentAreaCode, 
-    currentContentsType, 
+    currentContentsType,
+    currentRegionCode,
     sigunguSelected ? currentSigunguCode : undefined,
-    eventStartDate
+    eventStartDate,
+    eventEndDate
   );
 
-  const filteredSpots = useMemo(() => {
-    let tempSpots = spots.filter(spot => 
+const filteredSpots = useMemo(() => {
+    return spots.filter(spot => 
       spot.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
-    if (currentContentsType === 15 && eventEndDate) {
-      const endDateStr = formatDateForInput(eventEndDate).replace(/-/g, '');
-      tempSpots = tempSpots.filter(spot => {
-        return !spot.eventStartDate || spot.eventStartDate <= endDateStr;
-      });
-    }
-    
-    return tempSpots;
-  }, [spots, searchQuery, currentContentsType, eventEndDate]);
+  }, [spots, searchQuery]);
 
   const totalPages = Math.ceil(filteredSpots.length / itemsPerPage);
   
@@ -65,20 +59,21 @@ export default function PlaceInformation() {
     [filteredSpots, currentPage, itemsPerPage]
   );
 
-  useEffect(() => { FetchAreaCode().then(setAreaList); }, []);
+  useEffect(() => { FetchLDongRegions().then(setRegionList); }, []);
   
   useEffect(() => {
-    if (currentAreaCode && areaSelected) {
-      FetchSigunguCode(currentAreaCode).then(setSigunguList);
+    if (currentRegionCode && regionSelected) {
+      FetchLDongSigungus(currentRegionCode).then(setSigunguList);
       setSigunguSelected(false);
+      setCurrentSigunguCode(undefined);
     }
-  }, [currentAreaCode, areaSelected]);
+  }, [currentRegionCode, regionSelected]);
   
   useEffect(() => { window.scrollTo({ top: 0 }); }, [currentPage]);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, currentAreaCode, currentContentsType, currentSigunguCode, eventStartDate, eventEndDate]);
+  }, [searchQuery, currentRegionCode, currentSigunguCode, currentContentsType, eventStartDate, eventEndDate]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEventStartDate(new Date(e.target.value));
@@ -88,8 +83,8 @@ export default function PlaceInformation() {
     setEventEndDate(e.target.value ? new Date(e.target.value) : null);
   };
 
+
   return (
-    // 전체 컨테이너에 패딩과 배경색 추가
     <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
@@ -104,27 +99,27 @@ export default function PlaceInformation() {
         <div className="space-y-6 bg-white p-6 rounded-xl shadow-lg">
           <SearchInput value={searchQuery} onChange={setSearchQuery} />
 
-          {/* 지역 선택 */}
+          {/* 지역 선택 로직 변경 */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-gray-700 mr-2">지역 선택 :</span>
-            {areaList.map(item => (
+            {regionList.map(item => (
               <AreaButton 
                 key={item.id} 
-                area={item}
-                isActive={item.areaCode === currentAreaCode}
+                region={item}
+                isActive={item.regionCode === currentRegionCode}
                 onClick={() => { 
-                  setCurrentAreaCode(item.areaCode); 
-                  setAreaSelected(true); 
+                  setCurrentRegionCode(item.regionCode); 
+                  setRegionSelected(true); 
                   setSigunguList([]); 
-                  setCurrentSigunguCode(1); 
+                  setCurrentSigunguCode(undefined); 
                   setSigunguSelected(false); 
                 }} 
               />
             ))}
           </div>
 
-          {/* 시군구 선택 */}
-          {areaSelected && sigunguList.length > 0 && (
+          {/* 시군구 선택 로직 변경 */}
+          {regionSelected && sigunguList.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-semibold text-gray-700 mr-2">시군구 선택 :</span>
               {sigunguList.map(item => (
@@ -141,7 +136,6 @@ export default function PlaceInformation() {
             </div>
           )}
           
-          {/* 카테고리 선택 */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-gray-700 mr-2">카테고리 선택 :</span>
             {contentsTypeList.map(item => (
@@ -155,12 +149,10 @@ export default function PlaceInformation() {
             ))}
           </div>
 
-          {/* 날짜 선택 (축제/공연/행사) */}
           {currentContentsType === 15 && (
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <div>
                 <label htmlFor="event-start-date" className="font-semibold text-gray-700 mr-2">행사 시작일: </label>
-                {/* 날짜 입력 필드 스타일링 */}
                 <input 
                   type="date" 
                   id="event-start-date" 
@@ -179,7 +171,6 @@ export default function PlaceInformation() {
                   onChange={handleEndDateChange} 
                   className="border-gray-300 rounded-md shadow-sm p-2"
                 />
-                {/* 초기화 버튼 스타일링 */}
                 <button 
                   onClick={() => setEventEndDate(null)} 
                   className="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-3 rounded-lg transition-colors text-sm"
@@ -191,7 +182,6 @@ export default function PlaceInformation() {
           )}
         </div>
         
-        {/* 결과 표시 */}
         <div className="mt-8">
           {loading && <p className="text-center text-gray-500">로딩 중...</p>}
           {error && <p className="text-center text-red-500 font-semibold">{error}</p>}

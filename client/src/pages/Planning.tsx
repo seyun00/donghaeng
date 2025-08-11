@@ -1,8 +1,11 @@
+// /src/pages/Planning.tsx
+
 import { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ReactDOMServer from 'react-dom/server';
 import supabase from '../api/supabaseClient';
 import PlanSpotItem from '../components/PlanSpotItem';
+// [수정됨] API 함수 시그니처가 변경되었으므로 import도 확인
 import { FetchDetailCommonInfo } from '../api/FetchTourApi';
 import NumberedMarker from '../components/Marker';
 
@@ -55,7 +58,8 @@ export default function Planning() {
       setLoading(true);
       const [planResult, spotsResult] = await Promise.all([
         supabase.from('plans').select('plan_name').eq('id', planId).single(),
-        supabase.from('plan_spots').select('*').eq('plan_id', planId).order('created_at')
+        // 이전에 수정한 'spot_order'를 사용하도록 변경
+        supabase.from('plan_spots').select('*').eq('plan_id', planId).order('spot_order')
       ]);
       
       const { data: planData } = planResult;
@@ -115,7 +119,7 @@ export default function Planning() {
 
             for (let i = 0; i < spots.length; i++) {
                 const spot = spots[i];
-                const details = await FetchDetailCommonInfo(spot.tour_api_content_id, spot.content_type_id);
+                const details = await FetchDetailCommonInfo(spot.tour_api_content_id);
                 
                 if (details && details.mapy && details.mapx) {
                     const position = new naver.maps.LatLng(details.mapy, details.mapx);

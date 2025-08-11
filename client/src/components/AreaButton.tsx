@@ -1,18 +1,20 @@
 import React from 'react';
 
-export interface Area {
+// 인터페이스 이름 및 속성 변경
+export interface Region {
   id: number;
-  areaCode: number;
-  areaName: string;
+  regionCode: number;
+  regionName: string;
 }
 
 interface AreaButtonProps {
-  area: Area;
+  // 타입 이름 변경
+  region: Region;
   onClick: () => void;
   isActive: boolean;
 }
 
-const AreaButton: React.FC<AreaButtonProps> = ({ area, onClick, isActive }) => {
+const AreaButton: React.FC<AreaButtonProps> = ({ region, onClick, isActive }) => {
   const baseClasses = "py-2 px-4 rounded-lg font-semibold transition-colors duration-200 ease-in-out shadow-sm";
   const activeClasses = "bg-indigo-600 text-white";
   const inactiveClasses = "bg-gray-200 text-gray-700 hover:bg-gray-300";
@@ -22,7 +24,7 @@ const AreaButton: React.FC<AreaButtonProps> = ({ area, onClick, isActive }) => {
       className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
       onClick={onClick}
     >
-      {area.areaName}
+      {region.regionName}
     </button>
   );
 };

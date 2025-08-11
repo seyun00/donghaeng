@@ -1,6 +1,6 @@
 // tools/details/labelMap.ts
 
-// 각 콘텐츠 타입별 API 필드 이름과 한글 레이블을 매핑합니다.
+// 각 콘텐츠 타입별 API 필드 이름과 한글 레이블을 매핑
 // 출처: TourAPI활용매뉴얼 v4.2 [소개정보조회] 응답메시지 명세
 export const detailLabels: { [key: string]: string } = {
   // 관광지 (contentTypeId=12)
@@ -130,9 +130,8 @@ export const detailLabels: { [key: string]: string } = {
   lcnsno: "인허가번호",
 };
 
-// 특별한 포맷팅이 필요한 필드를 관리합니다.
+// 특별한 포맷팅이 필요한 필드를 관리
 export const specialFields: { [key: string]: (value: any) => string | React.ReactNode } = {
-  // 날짜 포맷팅
   eventstartdate: (value) => formatDate(value),
   eventenddate: (value) => formatDate(value),
   opendate: (value) => formatDate(value),

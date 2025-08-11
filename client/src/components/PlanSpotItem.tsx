@@ -18,7 +18,7 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({ spot }) => {
     const fetchDetails = async () => {
       setLoading(true);
       try {
-        const data = await FetchDetailCommonInfo(spot.tour_api_content_id, spot.content_type_id);
+        const data = await FetchDetailCommonInfo(spot.tour_api_content_id);
         if (data) {
           setDetails({ title: data.title, firstimage: data.firstimage });
         }
@@ -30,8 +30,7 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({ spot }) => {
     };
 
     fetchDetails();
-  }, [spot.tour_api_content_id, spot.content_type_id]);
-
+  }, [spot.tour_api_content_id]); 
   if (loading) {
     return <li style={{ padding: '10px', borderBottom: '1px solid #eee' }}>정보를 불러오는 중...</li>;
   }

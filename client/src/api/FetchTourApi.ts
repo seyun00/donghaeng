@@ -1,11 +1,9 @@
-// api/FetchTourApi.ts
-
 const TOURAPI_KEY = process.env.REACT_APP_TOURAPI_KEY;
 const decodedKey = decodeURIComponent(TOURAPI_KEY || "");
 
 // API 요청을 위한 기본 클라이언트 함수
 async function apiClient(operation: string, additionalParams: Record<string, string> = {}) {
-  const baseUrl = 'https://apis.data.go.kr/B551011/KorService1/';
+  const baseUrl = 'https://apis.data.go.kr/B551011/KorService2/';
   const url = new URL(baseUrl + operation);
   
   const baseParams = {
@@ -16,12 +14,18 @@ async function apiClient(operation: string, additionalParams: Record<string, str
   };
 
   const params = { ...baseParams, ...additionalParams };
-  Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      url.searchParams.append(key, value);
+    }
+  });
 
   try {
     const res = await fetch(url.toString());
     if (!res.ok) {
-      throw new Error(`API 요청 실패: ${res.status} ${res.statusText}`);
+        const errorText = await res.text();
+        console.error("API 응답 에러:", errorText);
+        throw new Error(`API 요청 실패: ${res.status} ${res.statusText}`);
     }
     return await res.json();
   } catch (error) {
@@ -37,23 +41,24 @@ export interface TouristSpot {
   imageUrl: string;
   location: string;
   contentTypeId: string; 
-  eventStartDate?: string; // 행사 시작일 필드
+  eventStartDate?: string; 
 }
 
-export async function FetchTourSpots(areaCode: number, contentsType: number, sigunguCode?: number): Promise<TouristSpot[]> {
-  const params: Record<string, string> = {
-    numOfRows: '10000',
+export async function FetchTourSpots(
+  contentsType: number,
+  lDongRegnCd?: number,
+  lDongSignguCd?: number
+): Promise<TouristSpot[]> {
+  const params: Record<string, any> = {
+    numOfRows: '1000',
     pageNo: '1',
     arrange: 'B',
     contentTypeId: contentsType.toString(),
-    areaCode: areaCode.toString(),
+    lDongRegnCd: lDongRegnCd?.toString(),
+    lDongSignguCd: lDongSignguCd?.toString(),
   };
 
-  if (sigunguCode) {
-    params.sigunguCode = sigunguCode.toString();
-  }
-  const data = await apiClient('areaBasedList1', params);
-  
+  const data = await apiClient('areaBasedList2', params);
   const items = data.response?.body?.items?.item ?? [];
   return items.map((item: any) => ({
     id: item.contentid,
@@ -65,18 +70,26 @@ export async function FetchTourSpots(areaCode: number, contentsType: number, sig
   }));
 }
 
-export async function FetchAreaCode() {
-  const data = await apiClient('areaCode1', { numOfRows: '20', pageNo: '1' });
+// [수정됨] 법정동 시/도 코드 조회: numOfRows 추가
+export async function FetchLDongRegions() {
+  const data = await apiClient('ldongCode2', { 
+    numOfRows: '50',
+    lDongListYn: 'N' 
+  });
   const items = data.response?.body?.items?.item ?? [];
   return items.map((item: any) => ({
     id: item.rnum,
-    areaCode: item.code,
-    areaName: item.name,
+    regionCode: item.code,
+    regionName: item.name,
   }));
 }
 
-export async function FetchSigunguCode(areaCode:number) {
-  const data = await apiClient('areaCode1', { numOfRows: '50', pageNo: '1', areaCode: areaCode.toString() });
+// [수정됨] 법정동 시/군/구 코드 조회: numOfRows 추가
+export async function FetchLDongSigungus(regionCode:number) {
+  const data = await apiClient('ldongCode2', { 
+    numOfRows: '500',
+    lDongRegnCd: regionCode.toString() 
+  });
   const items = data.response?.body?.items?.item ?? [];
   return items.map((item: any) => ({
     id: item.rnum,
@@ -85,46 +98,41 @@ export async function FetchSigunguCode(areaCode:number) {
   }));
 }
 
-export async function FetchDetailCommonInfo(contentId: string, contentTypeId: string) {
-  const data = await apiClient('detailCommon1', {
+export async function FetchDetailCommonInfo(contentId: string) {
+  const data = await apiClient('detailCommon2', {
     contentId,
-    contentTypeId,
-    defaultYN: 'Y',
-    firstImageYN: 'Y',
-    overviewYN: 'Y',
-    mapinfoYN: 'Y',
   });
-  return data.response?.body?.items?.item?.[0] || data.response?.body?.items?.item || null;
+  return data.response?.body?.items?.item?.[0] || null;
 }
 
 export async function FetchIntroInfo(contentId: string, contentTypeId: string) {
-  const data = await apiClient('detailIntro1', { contentId, contentTypeId });
-  return data.response?.body?.items?.item?.[0] || data.response?.body?.items?.item || null;
+  const data = await apiClient('detailIntro2', { contentId, contentTypeId });
+  return data.response?.body?.items?.item?.[0] || null;
 }
 
 export async function FetchRepeatInfo(contentId: string, contentTypeId: string) {
-  const data = await apiClient('detailInfo1', { contentId, contentTypeId });
+  const data = await apiClient('detailInfo2', { contentId, contentTypeId });
   return data.response?.body?.items?.item ?? [];
 }
 
-// --- 아래 행사 정보 조회 함수 추가 ---
-export async function FetchEvents(eventStartDate: string, areaCode?: number, sigunguCode?: number): Promise<TouristSpot[]> {
-  const params: Record<string, string> = {
-    numOfRows: '10000',
+export async function FetchEvents(
+  eventStartDate: string,
+  eventEndDate?: string,
+  lDongRegnCd?: number,
+  lDongSignguCd?: number
+): Promise<TouristSpot[]> {
+  const params: Record<string, any> = {
+    numOfRows: '1000',
     pageNo: '1',
     arrange: 'A',
     listYN: 'Y',
     eventStartDate,
+    eventEndDate,
+    lDongRegnCd: lDongRegnCd?.toString(),
+    lDongSignguCd: lDongSignguCd?.toString(),
   };
 
-  if (areaCode) {
-    params.areaCode = areaCode.toString();
-  }
-  if (sigunguCode) {
-    params.sigunguCode = sigunguCode.toString();
-  }
-
-  const data = await apiClient('searchFestival1', params);
+  const data = await apiClient('searchFestival2', params);
   const items = data.response?.body?.items?.item ?? [];
   
   return items.map((item: any) => ({
@@ -134,6 +142,6 @@ export async function FetchEvents(eventStartDate: string, areaCode?: number, sig
     imageUrl: item.firstimage || '',
     location: item.addr1 || '위치 정보 없음',
     contentTypeId: item.contenttypeid?.toString() || '15', 
-    eventStartDate: item.eventstartdate, // 응답받은 행사 시작일 데이터를 매핑
+    eventStartDate: item.eventstartdate, 
   }));
 }
