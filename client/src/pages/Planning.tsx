@@ -9,7 +9,7 @@ import { FetchDetailCommonInfo } from '../api/FetchTourApi';
 import NumberedMarker from '../components/Marker';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 
-// [수정됨] Spot 타입에 좌표 정보 추가
+
 export interface EnrichedSpot extends Spot {
   mapx?: string;
   mapy?: string;
@@ -244,15 +244,12 @@ export default function Planning() {
     }, {} as Record<number, EnrichedSpot[]>);
   }, [spots]);
 
-  // [수정됨] handleSpotClick 함수
+
   const handleSpotClick = (mapy: string, mapx: string, day: number) => {
-    // 1. 먼저 일차(day) 상태를 변경하여 지도 뷰를 전환
     setSelectedDay(day);
 
-    // 2. 지도 인스턴스가 있고, 좌표가 유효한 경우 해당 위치로 이동
     if (mapInstance.current && mapy && mapx) {
       const position = new window.naver.maps.LatLng(Number(mapy), Number(mapx));
-      // panTo는 부드러운 이동을 제공
       mapInstance.current.panTo(position);
     }
   };

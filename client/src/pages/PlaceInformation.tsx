@@ -21,7 +21,7 @@ const formatDateForInput = (date: Date): string => {
 export default function PlaceInformation() {
   const [searchParams] = useSearchParams();
   const planId = searchParams.get('planId');
-  const visitDay = searchParams.get('day'); // [추가됨] URL에서 day 값을 읽음
+  const visitDay = searchParams.get('day'); 
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentRegionCode, setCurrentRegionCode] = useState<number | undefined>(11);
@@ -187,7 +187,7 @@ export default function PlaceInformation() {
             </p>
           )}
 
-          {/* [수정됨] visitDay prop을 TouristSpotList에 전달 */}
+          
           <TouristSpotList spots={currentSpots} planId={planId} visitDay={visitDay} />
 
           <Pagination
