@@ -1,14 +1,14 @@
+// /src/pages/PlaceInformation.tsx
+
 import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTouristSpots } from "../hooks/Tour_spots";
 import SearchInput from "../tools/Search_Input";
 import TouristSpotList from "../tools/Tour_list";
 import Pagination from "../components/Pagination";
-// import 변경
 import AreaButton, { Region } from "../components/AreaButton";
 import ContentsTypeButton, { contentsTypeList } from "../components/ContentsTypeButton";
 import SigunguButton, { Sigungu } from "../components/SigunguButton";
-// import 변경
 import { FetchLDongRegions, FetchLDongSigungus } from "../api/FetchTourApi";
 
 const formatDateForInput = (date: Date): string => {
@@ -21,10 +21,10 @@ const formatDateForInput = (date: Date): string => {
 export default function PlaceInformation() {
   const [searchParams] = useSearchParams();
   const planId = searchParams.get('planId');
+  const visitDay = searchParams.get('day'); // [추가됨] URL에서 day 값을 읽음
 
   const [searchQuery, setSearchQuery] = useState("");
-  //  상태 변수 이름 및 초기값 변경
-  const [currentRegionCode, setCurrentRegionCode] = useState<number | undefined>(11); // 서울특별시
+  const [currentRegionCode, setCurrentRegionCode] = useState<number | undefined>(11);
   const [regionSelected, setRegionSelected] = useState(false);
   const [currentSigunguCode, setCurrentSigunguCode] = useState<number | undefined>();
   const [sigunguSelected, setSigunguSelected] = useState(false);
@@ -34,10 +34,9 @@ export default function PlaceInformation() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
-  const [eventStartDate, setEventStartDate] = useState(new Date());
+  const [eventStartDate, setEventStartDate] = useState(new Date('2024-01-01'));
   const [eventEndDate, setEventEndDate] = useState<Date | null>(null);
 
-  // useTouristSpots 훅 호출 파라미터 변경
   const { spots, loading, error } = useTouristSpots(
     currentContentsType,
     currentRegionCode,
@@ -46,7 +45,7 @@ export default function PlaceInformation() {
     eventEndDate
   );
 
-const filteredSpots = useMemo(() => {
+  const filteredSpots = useMemo(() => {
     return spots.filter(spot => 
       spot.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -83,7 +82,6 @@ const filteredSpots = useMemo(() => {
     setEventEndDate(e.target.value ? new Date(e.target.value) : null);
   };
 
-
   return (
     <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -99,7 +97,6 @@ const filteredSpots = useMemo(() => {
         <div className="space-y-6 bg-white p-6 rounded-xl shadow-lg">
           <SearchInput value={searchQuery} onChange={setSearchQuery} />
 
-          {/* 지역 선택 로직 변경 */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-gray-700 mr-2">지역 선택 :</span>
             {regionList.map(item => (
@@ -118,7 +115,6 @@ const filteredSpots = useMemo(() => {
             ))}
           </div>
 
-          {/* 시군구 선택 로직 변경 */}
           {regionSelected && sigunguList.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-semibold text-gray-700 mr-2">시군구 선택 :</span>
@@ -191,7 +187,8 @@ const filteredSpots = useMemo(() => {
             </p>
           )}
 
-          <TouristSpotList spots={currentSpots} planId={planId} />
+          {/* [수정됨] visitDay prop을 TouristSpotList에 전달 */}
+          <TouristSpotList spots={currentSpots} planId={planId} visitDay={visitDay} />
 
           <Pagination
             currentPage={currentPage}
