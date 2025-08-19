@@ -32,7 +32,7 @@ const VisitListPanel = ({
   planId: string | undefined;
   planDuration: number;
   draggedItemId: string | null;
-  onSpotClick: (mapy: string, mapx: string) => void;
+  onSpotClick: (mapy: string, mapx: string, day: number) => void; // [수정됨]
   onDayViewChange: (day: number) => void;
   handleDragStart: (spotId: string) => void;
   handleDragOver: (e: React.DragEvent<HTMLLIElement>, spotId: string) => void;
@@ -135,7 +135,6 @@ export default function Planning() {
         const { data: spotsData, error: spotsError } = spotsResult;
         if (spotsError) throw spotsError;
         
-        // [수정됨] 좌표 정보를 미리 다 가져와서 state에 저장
         if (spotsData) {
           const enrichedSpots = await Promise.all(
             (spotsData as Spot[]).map(async (spot) => {
@@ -203,7 +202,6 @@ export default function Planning() {
     const newMarkers: any[] = [];
     const polylinePath: any[] = [];
     
-    // [수정됨] 더 이상 API 호출 없이, state에 저장된 좌표 정보로 바로 지도를 그림
     spotsForSelectedDay.forEach((spot, index) => {
       if (spot.mapy && spot.mapx) {
         const position = new naver.maps.LatLng(spot.mapy, spot.mapx);
@@ -246,9 +244,15 @@ export default function Planning() {
     }, {} as Record<number, EnrichedSpot[]>);
   }, [spots]);
 
-  const handleSpotClick = (mapy: string, mapx: string) => {
+  // [수정됨] handleSpotClick 함수
+  const handleSpotClick = (mapy: string, mapx: string, day: number) => {
+    // 1. 먼저 일차(day) 상태를 변경하여 지도 뷰를 전환
+    setSelectedDay(day);
+
+    // 2. 지도 인스턴스가 있고, 좌표가 유효한 경우 해당 위치로 이동
     if (mapInstance.current && mapy && mapx) {
       const position = new window.naver.maps.LatLng(Number(mapy), Number(mapx));
+      // panTo는 부드러운 이동을 제공
       mapInstance.current.panTo(position);
     }
   };

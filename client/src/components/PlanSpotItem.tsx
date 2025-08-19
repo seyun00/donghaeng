@@ -18,14 +18,14 @@ export interface Spot {
 interface PlanSpotItemProps {
   spot: Spot;
   isDragging: boolean;
-  onSpotClick: (mapy: string, mapx: string) => void; // [추가됨] 클릭 핸들러 prop
+  // [수정됨] onSpotClick prop에 day: number 추가
+  onSpotClick: (mapy: string, mapx: string, day: number) => void;
   handleDragStart: (spotId: string) => void;
   handleDragOver: (e: React.DragEvent<HTMLLIElement>, spotId: string) => void;
   handleDrop: (spotId: string) => void;
   handleDragEnd: () => void;
 }
 
-// [수정됨] 상세 정보 상태 타입 확장
 interface SpotDetails {
   title: string;
   firstimage: string;
@@ -41,7 +41,7 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
 
   const style: React.CSSProperties = {
     opacity: isDragging ? 0.5 : 1,
-    cursor: 'pointer', // 클릭 가능함을 나타내도록 grab에서 pointer로 변경
+    cursor: 'pointer',
   };
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
       try {
         const data = await FetchDetailCommonInfo(spot.tour_api_content_id);
         if (data) {
-          setDetails(data); // API 응답 전체를 저장하여 좌표 정보 활용
+          setDetails(data);
         }
       } catch (error) {
         console.error("장소 상세 정보 로딩 실패:", error);
@@ -61,10 +61,10 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
     fetchDetails();
   }, [spot.tour_api_content_id]);
   
-  // [추가됨] 클릭 시 좌표를 부모에게 전달하는 함수
+  // [수정됨] 클릭 시 좌표와 함께 '일차' 정보도 부모에게 전달
   const handleClick = () => {
     if (details?.mapy && details?.mapx) {
-      onSpotClick(details.mapy, details.mapx);
+      onSpotClick(details.mapy, details.mapx, spot.visit_day);
     }
   };
 
@@ -83,7 +83,7 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
       onDragOver={(e) => handleDragOver(e, spot.id)}
       onDrop={() => handleDrop(spot.id)}
       onDragEnd={handleDragEnd}
-      onClick={handleClick} // [추가됨] 클릭 이벤트 바인딩
+      onClick={handleClick}
       style={style}
       title="클릭하면 지도를 이동합니다. 드래그하여 순서를 바꾸세요."
     >
