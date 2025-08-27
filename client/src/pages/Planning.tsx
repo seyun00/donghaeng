@@ -1,5 +1,3 @@
-// /src/pages/Planning.tsx
-
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ReactDOMServer from 'react-dom/server';
@@ -8,12 +6,18 @@ import PlanSpotItem, { Spot } from '../components/PlanSpotItem';
 import { FetchDetailCommonInfo } from '../api/FetchTourApi';
 import NumberedMarker from '../components/Marker';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
-
+import Chatting from '../components/Chatting';
 
 export interface EnrichedSpot extends Spot {
   mapx?: string;
   mapy?: string;
 }
+
+type UserInfo = {
+  user_id: string;
+  nickname: string;
+  profile_url?: string;
+};
 
 // --- 좌측 패널 컴포넌트 ---
 const VisitListPanel = ({
@@ -92,6 +96,7 @@ const VisitListPanel = ({
 // --- 메인 여행 계획 페이지 ---
 export default function Planning() {
   const { planId } = useParams<{ planId: string }>();
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
   const mapElement = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<any>(null);
   const [spots, setSpots] = useState<EnrichedSpot[]>([]);
@@ -244,6 +249,21 @@ export default function Planning() {
     }, {} as Record<number, EnrichedSpot[]>);
   }, [spots]);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUser({
+          user_id: user.id,
+          nickname: user.user_metadata?.nickname || '익명',
+          profile_url: user.user_metadata?.avatar_url,
+        });
+      }
+    };
+    fetchUser();
+  }, []);
+
+  if (!planId || !currentUser) return <p>로딩 중...</p>;
 
   const handleSpotClick = (mapy: string, mapx: string, day: number) => {
     setSelectedDay(day);
@@ -255,7 +275,9 @@ export default function Planning() {
   };
 
   if (loading) return <p>여행 계획을 불러오는 중...</p>;
-  if (error) return <div><p>{error}</p><Link to="/">홈으로</Link></div>;
+  if (error) return <div><p>{error}</p><Link to="/">홈으로</Link>
+  <Chatting planId={planId!} user={currentUser} />
+  </div>;
   if (!planId || !plan) return <div><p>표시할 여행 계획이 없습니다.</p><Link to="/">홈으로</Link></div>;
 
   return (
@@ -281,7 +303,9 @@ export default function Planning() {
           ref={mapElement} 
           style={{ flex: 1, width: '100%', height: '100%' }} 
         />
-        <div style={{ width: '350px', borderLeft: '1px solid #ddd', padding: '15px' }}>채팅창 영역</div>
+        <div style={{ width: '350px', borderLeft: '1px solid #ddd', padding: '0px' }}>
+          <Chatting planId={planId!} user={currentUser} />
+        </div>
       </div>
     </div>
   );
