@@ -43,15 +43,9 @@ useEffect(() => {
         };
       })
     );
-    console.log('members data', data, error);
   };
   loadMembers();
 }, [planId]);
-
-useEffect(() => {
-  console.log('Members state updated:', members);
-}, [members]);
-
 
 // 메시지 불러오기 및 실시간 구독
   useEffect(() => {

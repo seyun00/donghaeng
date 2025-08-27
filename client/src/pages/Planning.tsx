@@ -275,9 +275,7 @@ export default function Planning() {
   };
 
   if (loading) return <p>여행 계획을 불러오는 중...</p>;
-  if (error) return <div><p>{error}</p><Link to="/">홈으로</Link>
-  <Chatting planId={planId!} user={currentUser} />
-  </div>;
+  if (error) return <div><p>{error}</p><Link to="/">홈으로</Link></div>;
   if (!planId || !plan) return <div><p>표시할 여행 계획이 없습니다.</p><Link to="/">홈으로</Link></div>;
 
   return (
