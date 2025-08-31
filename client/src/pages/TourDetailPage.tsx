@@ -1,25 +1,50 @@
 // /src/pages/TourDetailPage.tsx
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import TourDetail from '../tools/TourDetail';
 import { FetchDetailCommonInfo, FetchIntroInfo, FetchRepeatInfo } from '../api/FetchTourApi';
 import supabase from '../api/supabaseClient';
+import ReviewList, { Review } from '../components/ReviewList';
+import ReviewForm from '../components/ReviewForm';
+import useSession from '../hooks/useSesstion';
 
 const TourDetailPage = () => {
     const { contentId, contentTypeId } = useParams<{ contentId: string; contentTypeId: string }>();
     const [searchParams] = useSearchParams();
     const planId = searchParams.get('planId');
-    // [추가됨] URL에서 day 파라미터를 읽어옴
     const visitDay = searchParams.get('day');
+    const isLogin = useSession();
 
     const [common, setCommon] = useState<any>(null);
     const [intro, setIntro] = useState<any>(null);
     const [repeatInfo, setRepeatInfo] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [reviews, setReviews] = useState<Review[]>([]);
+
+    const fetchReviews = async () => {
+      if (!contentId) return;
+      
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*, public_profiles(nickname, profile_url)')
+        .eq('content_id', contentId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('리뷰 로딩 실패:', error);
+      } else {
+        const mappedData = data.map(review => ({
+          ...review,
+          userinfo: review.public_profiles
+        }));
+        setReviews(mappedData as Review[]);
+      }
+    };
 
     useEffect(() => {
         if (!contentId || !contentTypeId) return;
+        
         const fetchData = async () => {
             setLoading(true);
             try {
@@ -37,11 +62,37 @@ const TourDetailPage = () => {
                 setLoading(false);
             }
         };
+
         fetchData();
+        fetchReviews();
     }, [contentId, contentTypeId]);
 
+    const handleReviewSubmit = async (rating: number, content: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+      if (!contentId || !contentTypeId) return;
+      
+      const newReview = {
+        user_id: user.id,
+        content_id: contentId,
+        content_type_id: contentTypeId,
+        rating,
+        content,
+      };
+
+      const { error } = await supabase.from('reviews').insert(newReview);
+      if (error) {
+        alert(`리뷰 등록 실패: ${error.message}`);
+      } else {
+        alert('리뷰가 성공적으로 등록되었습니다.');
+        fetchReviews();
+      }
+    };
+
     const handleAddToPlan = async () => {
-        // [수정됨] planId 뿐만 아니라 visitDay도 있는지 확인
         if (!planId || !visitDay) {
             alert("추가할 여행 계획 또는 날짜가 지정되지 않았습니다.");
             return;
@@ -52,8 +103,6 @@ const TourDetailPage = () => {
         }
 
         const day = Number(visitDay);
-
-        // 선택된 날짜(day)의 마지막 순서를 계산
         const { count, error: countError } = await supabase
             .from('plan_spots')
             .select('*', { count: 'exact', head: true })
@@ -69,7 +118,7 @@ const TourDetailPage = () => {
             plan_id: Number(planId),
             tour_api_content_id: contentId,
             content_type_id: contentTypeId,
-            visit_day: day, // URL에서 가져온 날짜로 설정
+            visit_day: day, 
             visit_order: count ?? 0,
         };
 
@@ -94,7 +143,6 @@ const TourDetailPage = () => {
             <div className="max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-bold">관광지 상세 정보</h1>
-                    {/* [수정됨] planId와 visitDay가 모두 있을 때만 버튼 표시 */}
                     {planId && visitDay && (
                         <button
                             onClick={handleAddToPlan}
@@ -110,6 +158,12 @@ const TourDetailPage = () => {
                     intro={intro}
                     repeatInfo={repeatInfo}
                 />
+                
+                <div className="mt-8 p-6 bg-white rounded-xl shadow">
+                    <h3 className="text-2xl font-bold mb-4">리뷰 ({reviews.length}개)</h3>
+                    <ReviewList reviews={reviews} />
+                    {isLogin && <ReviewForm onSubmit={handleReviewSubmit} />}
+                </div>
             </div>
         </div>
     );

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import supabase from "../api/supabaseClient";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AddFriendModal from "../components/AddFriendModal";
+import { Review } from "../components/ReviewList";
 
 export default function MyPage () {
   const [menu, setMenu] = useState<string>("edit_info");
@@ -11,13 +12,20 @@ export default function MyPage () {
   const [email, setEmail] = useState("");
   const [profileUrl, setProfileUrl] = useState<string | null>(null);
   const [isSocialLogin, setIsSocialLogin] = useState(false);
-
   const [uploading, setUploading] = useState(false);
-
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-  
   const [loading, setLoading] = useState(true);
+  const [myReviews, setMyReviews] = useState<Review[]>([]);
+
+  type Friend = {
+    id: string;
+    email: string;
+    nickname: string;
+  };
+  const [friendsList, setFriendsList] = useState<Friend[]>([]);
+  const friendIds = friendsList.map(friend => friend.id); 
+  const [modalOpen, setModalOpen] = useState(false);
 
   const navigate = useNavigate();
   
@@ -31,10 +39,8 @@ export default function MyPage () {
         return;
       }
       setUserId(user.id);
-
       const socialLogin = user.identities?.some(identity => identity.provider !== "email") ?? false;
       setIsSocialLogin(socialLogin);
-
       const { data: userData, error: userError } = await supabase
         .from("userinfo") 
         .select("*")
@@ -42,8 +48,7 @@ export default function MyPage () {
         .single();
         
       if (userError || !userData) {
-        console.log("select 오류");
-        console.log(userError)
+        console.log("select 오류", userError);
         return;
       }
       const email_asterisk = userData.email.slice(0,6)+'*'.repeat(6);
@@ -52,38 +57,63 @@ export default function MyPage () {
       setProfileUrl(userData.profile_url);
       setLoading(false);
     };
-    
     fetchUserData();
   }, [navigate]);
 
-  // 개인정보 수정 핸들러 함수
-  const handleUpdate = async () => {
-    if (!window.confirm("회원정보를 수정하시겠습니까?")) {
+  const fetchMyReviews = async () => {
+    if (!userId) return;
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('내가 쓴 리뷰 로딩 실패:', error);
+    } else {
+      setMyReviews(data as Review[]);
+    }
+  };
+
+  useEffect(() => {
+    if (menu === 'my_review' && userId) {
+        fetchMyReviews();
+    }
+  }, [menu, userId]);
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!window.confirm("이 리뷰를 정말 삭제하시겠습니까?")) {
       return;
     }
+
+    const { error } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', reviewId);
     
+    if (error) {
+      alert(`리뷰 삭제에 실패했습니다: ${error.message}`);
+    } else {
+      alert("리뷰가 삭제되었습니다.");
+      setMyReviews(prevReviews => prevReviews.filter(review => review.id !== reviewId));
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!window.confirm("회원정보를 수정하시겠습니까?")) return;
     let updateFields = { nickname: nickName };
     if (newPassword) {
       if (newPassword !== newPasswordConfirm) {
         alert("비밀번호가 일치하지 않습니다.");
         return;
       }
-      // supabase auth에서 비밀번호 변경
-      const { error: pwError } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      const { error: pwError } = await supabase.auth.updateUser({ password: newPassword });
       if (pwError) {
         alert("비밀번호 변경 실패: " + pwError.message);
         return;
       }
     }
-
-    // userinfo table 닉네임 업데이트
-    const { error: updateError } = await supabase
-      .from("userinfo")
-      .update(updateFields)
-      .eq("id", userId);
-
+    const { error: updateError } = await supabase.from("userinfo").update(updateFields).eq("id", userId);
     if (updateError) {
       alert("회원정보 변경 실패: " + updateError.message);
       return;
@@ -91,97 +121,44 @@ export default function MyPage () {
     alert("회원정보가 성공적으로 수정되었습니다.");
   };
 
-  // 프로필 사진 수정
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files ? event.target.files[0] : null;
     if (!file) return;
-    
     setUploading(true);
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}_${Date.now()}.${fileExt}`;
-    
-    // Supabase Storage에 프로필 이미지 업로드
-    const { data, error } = await supabase.storage
-      .from('profileimage')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-    
+    const { error } = await supabase.storage.from('profileimage').upload(fileName, file, { cacheControl: '3600', upsert: false });
     if (error) {
       alert("파일 업로드 실패: " + error.message);
       setUploading(false);
       return;
     }
-  
-    // 이미지 url 생성 (public 버킷이라면 아래 방식, private이면 signed URL 필요)
-    const { data: publicUrlData } = supabase
-      .storage
-      .from('profileimage')
-      .getPublicUrl(fileName);
-  
+    const { data: publicUrlData } = supabase.storage.from('profileimage').getPublicUrl(fileName);
     const imageUrl = publicUrlData.publicUrl;
-  
-    // userinfo 테이블에 profile_url 업데이트
-    const { error: updateError } = await supabase
-      .from('userinfo')
-      .update({ profile_url: imageUrl })
-      .eq('id', userId);
-  
+    const { error: updateError } = await supabase.from('userinfo').update({ profile_url: imageUrl }).eq('id', userId);
     if (updateError) {
       alert("프로필 주소 업데이트 실패: " + updateError.message);
       setUploading(false);
       return;
     }
-  
     setProfileUrl(imageUrl);
     setUploading(false);
     alert("프로필 이미지가 성공적으로 변경되었습니다.");
   };
 
-  // 친구 리스트 불러오기
-  type Friend = {
-    id: string;
-    email: string;
-    nickname: string;
-  };
-  
-  const [friendsList, setFriendsList] = useState<Friend[]>([]);
-
   const fetchFriends = async () => {
     if (!userId) return;
-    
-    const { data, error } = await supabase
-      .from('friend_details')
-      .select('*')
-      .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
-      .eq('status', 'accepted');
-    
+    const { data, error } = await supabase.from('friend_details').select('*').or(`requester_id.eq.${userId},addressee_id.eq.${userId}`).eq('status', 'accepted');
     if (error) {
       console.error(error);
       return;
     }
-  
     const friends = data.map(f => {
-      if (f.requester_id === userId) {
-        return {
-          id: f.addressee_id,
-          email: f.addressee_email,
-          nickname: f.addressee_nickname,
-        };
-      } else {
-        return {
-          id: f.requester_id,
-          email: f.requester_email,
-          nickname: f.requester_nickname,
-        };
-      }
+      if (f.requester_id === userId) return { id: f.addressee_id, email: f.addressee_email, nickname: f.addressee_nickname };
+      else return { id: f.requester_id, email: f.requester_email, nickname: f.requester_nickname };
     });
-  
     setFriendsList(friends);
   };
-
-  const friendIds = friendsList.map(friend => friend.id); 
 
   useEffect(() => {
     if (userId) {
@@ -189,57 +166,33 @@ export default function MyPage () {
     }
   }, [userId]);
 
-  // 친구 추가 모달창 기능
-  const [modalOpen, setModalOpen] = useState(false);
-
   const handleSendFriendRequest = async (targetUserId: string) => {
     try {
       if (targetUserId === userId) {
         alert("본인에게 친구 요청을 보낼 수 없습니다.");
         return;
       }
-    
-      // 서로 중복 신청 방지를 위해, userId가 requester 또는 addressee인 경우 모두 탐색
       const { data: existingRequest, error: fetchError } = await supabase
         .from("friends")
         .select("id, status, requester_id, addressee_id")
-        .or(
-          `and(requester_id.eq.${userId},addressee_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},addressee_id.eq.${userId})`
-        )
+        .or(`and(requester_id.eq.${userId},addressee_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},addressee_id.eq.${userId})`)
         .maybeSingle();
-      
       if (fetchError && fetchError.code !== "PGRST116") {
         alert("친구 요청 상태 조회 중 오류가 발생했습니다: " + fetchError.message);
         return;
       }
-    
       if (!existingRequest) {
-        // 신규 요청 삽입
-        const { error: insertError } = await supabase
-          .from("friends")
-          .insert({
-            requester_id: userId,
-            addressee_id: targetUserId,
-            status: "pending",
-          });
-        
+        const { error: insertError } = await supabase.from("friends").insert({ requester_id: userId, addressee_id: targetUserId, status: "pending" });
         if (insertError) {
           alert("친구 요청 중 오류가 발생했습니다: " + insertError.message);
         } else {
           alert("친구 요청이 전송되었습니다.");
           setModalOpen(false);
         }
-      
       } else {
         const currentStatus = existingRequest.status;
-      
         if (currentStatus === "rejected" || currentStatus === "deleted") {
-          // 기존 거부/삭제 상태면 상태 갱신
-          const { error: updateError } = await supabase
-            .from("friends")
-            .update({ status: "pending" })
-            .eq("id", existingRequest.id);
-        
+          const { error: updateError } = await supabase.from("friends").update({ status: "pending" }).eq("id", existingRequest.id);
           if (updateError) {
             alert("친구 요청 전송 중 오류가 발생했습니다: " + updateError.message);
           } else {
@@ -262,22 +215,12 @@ export default function MyPage () {
 
   const handleDelete = async (friendUserId: string) => {
     if (!window.confirm("이 친구를 삭제하시겠습니까?")) return;
-    
-    const { error } = await supabase
-      .from("friends")
-      .update({ status: "deleted" })
-      .or(
-        `and(requester_id.eq.${userId},addressee_id.eq.${friendUserId}),and(requester_id.eq.${friendUserId},addressee_id.eq.${userId})`
-      );
-    
+    const { error } = await supabase.from("friends").update({ status: "deleted" }).or(`and(requester_id.eq.${userId},addressee_id.eq.${friendUserId}),and(requester_id.eq.${friendUserId},addressee_id.eq.${userId})`);
     if (error) {
       alert("친구 삭제에 실패했습니다: " + error.message);
       return;
     }
-  
     alert("친구가 삭제되었습니다.");
-  
-    // 삭제 후 UI 갱신: 현재 friendUserId 제외
     setFriendsList(prev => prev.filter(friend => friend.id !== friendUserId));
   };
 
@@ -286,7 +229,6 @@ export default function MyPage () {
       {!loading &&
       <div className="bg-gray-100 h-[100vh] pt-10">
         <div className="max-w-[1024px] m-auto h-4/5 bg-white flex justify-between">
-          
           <div className="flex flex-col border-r w-[15%]">
             <button className="mt-4" onClick={() => {setMenu("edit_info")}}>회원정보 변경</button>
             <button className="mt-4" onClick={() => {window.open('/plans', '_blank')}}>여행 일정 관리</button>
@@ -294,7 +236,6 @@ export default function MyPage () {
             <button className="mt-4" onClick={() => {setMenu("my_review")}}>내가 쓴 리뷰</button>
             <button className="mt-4" onClick={() => {setMenu("edit_firends")}}>친구 관리</button>
           </div>
-          
           <div className="w-full py-[5vh] px-[5vw]">
             {menu === "edit_info" && 
               <>
@@ -305,24 +246,10 @@ export default function MyPage () {
                       {profileUrl ? (<img src={profileUrl} alt="프로필 이미지" className="w-full h-full object-cover rounded-[20px]"/>
                       ) : (<span className="absolute text-gray-400 top-[50px] inset-0">등록된 사진이 <br />없습니다.</span>
                       )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        id="profile-upload"
-                        style={{ display: 'none' }}
-                        onChange={handleFileChange}
-                        disabled={uploading}
-                      />
+                      <input type="file" accept="image/*" id="profile-upload" style={{ display: 'none' }} onChange={handleFileChange} disabled={uploading}/>
                     </div>
-                    <button 
-                      className="text-gray-400 hover:text-gray-500" 
-                      onClick={() => {
-                        const elem = document.getElementById('profile-upload');
-                        if (elem) {
-                          elem.click();
-                        }
-                      }}
-                      disabled={uploading}>사진 수정하기
+                    <button className="text-gray-400 hover:text-gray-500" onClick={() => { document.getElementById('profile-upload')?.click(); }} disabled={uploading}>
+                      사진 수정하기
                     </button>
                   </div>
                   <div className="w-full pr-10 ml-5 text-right">
@@ -330,9 +257,7 @@ export default function MyPage () {
                     <div className="mb-4">이름 <input type="text" value={nickName} onChange={e => setNickName(e.target.value)} className="px-2 py-1 ml-4 bg-gray-100 rounded-[10px]"/></div>
                     <div className="mb-4">변경 비밀번호 <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} disabled={isSocialLogin} className={`px-2 py-1 ml-4 rounded-[10px] ${isSocialLogin ? "bg-gray-300" : "bg-gray-100"}`}/></div>
                     <div className="mb-4">비밀번호 재입력 <input type="password" value={newPasswordConfirm} onChange={e => setNewPasswordConfirm(e.target.value)} disabled={isSocialLogin} className={`px-2 py-1 ml-4 rounded-[10px] ${isSocialLogin ? "bg-gray-300" : "bg-gray-100"}`}/></div>
-                    {isSocialLogin && (
-                    <div className="mb-4 text-red-600"> 소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.</div>
-                    )}
+                    {isSocialLogin && (<div className="mb-4 text-red-600"> 소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.</div>)}
                     <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-[10px]" onClick={handleUpdate}>수정</button>
                   </div>
                 </div>
@@ -342,7 +267,39 @@ export default function MyPage () {
               <div className="text-[32px]">찜 리스트</div>
             }
             {menu === "my_review" && 
-              <div className="text-[32px]">내가 쓴 리뷰</div>
+              <>
+                <div className="text-[32px]">내가 쓴 리뷰</div>
+                <div className="mt-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                  {myReviews.length === 0 && <p>작성한 리뷰가 없습니다.</p>}
+                  {myReviews.map(review => (
+                    <div key={review.id} className="border rounded-lg p-4 shadow-sm">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <Link 
+                              to={`/detail/${review.content_id}/${review.content_type_id}`}
+                              className="font-bold text-lg hover:underline"
+                            >
+                              해당 관광지 정보 보기
+                          </Link>
+                          <div className="text-yellow-500 my-1">
+                            {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteReview(review.id)}
+                          className="text-sm text-red-500 hover:text-red-700"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                      <p className="text-gray-700 mt-2">{review.content}</p>
+                      <p className="text-xs text-gray-400 mt-2">
+                        {new Date(review.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </>
             }
             {menu === "edit_firends" && 
               <div>
@@ -357,10 +314,9 @@ export default function MyPage () {
                           <div><b>이메일</b> {friend.email}</div>
                         </div>
                         <div>
-                          <button 
-                          className="px-2 py-1 bg-white border rounded-[5px] hover:bg-gray-200"
-                          onClick={() => handleDelete(friend.id)}
-                          >삭제</button>
+                          <button className="px-2 py-1 bg-white border rounded-[5px] hover:bg-gray-200" onClick={() => handleDelete(friend.id)}>
+                            삭제
+                          </button>
                         </div>
                       </li>
                     ))}

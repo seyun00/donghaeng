@@ -8,7 +8,6 @@ export interface Region {
 }
 
 interface AreaButtonProps {
-  // 타입 이름 변경
   region: Region;
   onClick: () => void;
   isActive: boolean;
