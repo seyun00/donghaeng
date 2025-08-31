@@ -7,6 +7,8 @@ import { FetchDetailCommonInfo } from '../api/FetchTourApi';
 import NumberedMarker from '../components/Marker';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import Chatting from '../components/Chatting';
+import AddFriendsToPlanning from '../components/AddFriendToPlanning';
+import PlanMembersList from '../components/PlanMembersList';
 
 export interface EnrichedSpot extends Spot {
   mapx?: string;
@@ -106,6 +108,8 @@ export default function Planning() {
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const markersRef = useRef<any[]>([]);
   const polylineRef = useRef<any>(null);
+  const [membersOpen, setMembersOpen] = useState(false);
+  const [addFriendOpen, setAddFriendOpen] = useState(false);
 
   const { draggedItemId, handleDragStart, handleDragOver, handleDrop, handleDragEnd } = useDragAndDrop(spots, setSpots);
 
@@ -281,8 +285,25 @@ export default function Planning() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <header style={{ padding: '15px', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between' }}>
-        <h2>{plan.plan_name || '여행 계획'}</h2>
-        <div><button>친구 초대하기</button></div>
+        <div>
+          <span><Link to="/" >동행</Link></span>
+          <span className='ml-8'>{plan.plan_name || '여행 계획'}</span>
+        </div>
+        <div>
+          <button className="mr-8" onClick={() => setMembersOpen(true)}>멤버 목록</button>
+          <button onClick={() => setAddFriendOpen(true)}>친구 초대하기</button>
+        </div>
+        <PlanMembersList
+          open={membersOpen}
+          onClose={() => setMembersOpen(false)}
+          planId={planId!}
+        />
+        <AddFriendsToPlanning
+            open={addFriendOpen}
+            onClose={() => setAddFriendOpen(false)}
+            currentUserId={currentUser.user_id}
+            planId={planId}
+          />
       </header>
       <div style={{ display: 'flex', flex: 1, height: 'calc(100vh - 65px)' }}>
         <VisitListPanel

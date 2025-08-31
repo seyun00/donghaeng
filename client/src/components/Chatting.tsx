@@ -88,9 +88,9 @@ useEffect(() => {
   }, [messages]);
 
   // 입력폼 변화 핸들러
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  };
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  setInput(e.target.value);
+};
 
   // 메시지 전송
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -154,21 +154,19 @@ useEffect(() => {
     </div>
     {/* 입력 폼 */}
     <form
-      onSubmit={handleSend}
-      className="flex items-center gap-2 p-2 border-2"
-      style={{ height: '20%' }}
-    >
-      <input
-        type="text"
-        value={input}
-        onChange={handleInputChange}
-        className="flex-1 p-2 border"
-        placeholder="메시지를 입력하세요"
-      />
-      <button type="submit" className="px-4 py-2 text-white bg-blue-500 rounded">
-        전송
-      </button>
-    </form>
+  onSubmit={handleSend}
+  className="flex items-center gap-2 p-0 border-2"
+  style={{ height: '20%' }}
+>
+  <textarea
+    value={input}
+    onChange={handleInputChange}
+    className="flex-1 border rounded resize-none focus:outline-none"
+    placeholder="메시지를 입력하세요"
+    rows={3}
+    style={{ height: '100%', padding: '8px', boxSizing: 'border-box' }}
+  ></textarea>
+</form>
   </div>
   );
 }
