@@ -1,8 +1,10 @@
+
 import { useEffect, useState } from "react";
 import supabase from "../api/supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import AddFriendModal from "../components/AddFriendModal";
 import { Review } from "../components/ReviewList";
+import FavoriteList from "../components/FavoriteList"; // [추가됨]
 
 export default function MyPage () {
   const [menu, setMenu] = useState<string>("edit_info");
@@ -76,21 +78,14 @@ export default function MyPage () {
   };
 
   useEffect(() => {
-    if (menu === 'my_review' && userId) {
-        fetchMyReviews();
+    if (userId) {
+        if (menu === 'my_review') fetchMyReviews();
     }
   }, [menu, userId]);
 
   const handleDeleteReview = async (reviewId: string) => {
-    if (!window.confirm("이 리뷰를 정말 삭제하시겠습니까?")) {
-      return;
-    }
-
-    const { error } = await supabase
-      .from('reviews')
-      .delete()
-      .eq('id', reviewId);
-    
+    if (!window.confirm("이 리뷰를 정말 삭제하시겠습니까?")) return;
+    const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
     if (error) {
       alert(`리뷰 삭제에 실패했습니다: ${error.message}`);
     } else {
@@ -236,7 +231,7 @@ export default function MyPage () {
             <button className="mt-4" onClick={() => {setMenu("my_review")}}>내가 쓴 리뷰</button>
             <button className="mt-4" onClick={() => {setMenu("edit_firends")}}>친구 관리</button>
           </div>
-          <div className="w-full py-[5vh] px-[5vw]">
+          <div className="w-full py-[5vh] px-[5vw] overflow-y-auto">
             {menu === "edit_info" && 
               <>
                 <div className="text-[32px]">회원정보 변경</div>
@@ -264,7 +259,10 @@ export default function MyPage () {
               </>
             }
             {menu === "my_place" && 
-              <div className="text-[32px]">찜 리스트</div>
+              <>
+                <div className="text-[32px]">찜 리스트</div>
+                {userId && <FavoriteList userId={userId} />}
+              </>
             }
             {menu === "my_review" && 
               <>

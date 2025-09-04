@@ -21,10 +21,10 @@ const TourDetailPage = () => {
     const [repeatInfo, setRepeatInfo] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [reviews, setReviews] = useState<Review[]>([]);
+    const [isFavorited, setIsFavorited] = useState(false);
 
     const fetchReviews = async () => {
       if (!contentId) return;
-      
       const { data, error } = await supabase
         .from('reviews')
         .select('*, public_profiles(nickname, profile_url)')
@@ -40,6 +40,25 @@ const TourDetailPage = () => {
         }));
         setReviews(mappedData as Review[]);
       }
+    };
+
+    const checkFavoriteStatus = async () => {
+        if (!isLogin || !contentId) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+            .from('favorites')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('content_id', contentId)
+            .maybeSingle();
+
+        if (error) {
+            console.error('찜 상태 확인 실패:', error);
+        } else {
+            setIsFavorited(!!data);
+        }
     };
 
     useEffect(() => {
@@ -65,7 +84,10 @@ const TourDetailPage = () => {
 
         fetchData();
         fetchReviews();
-    }, [contentId, contentTypeId]);
+        if (isLogin) {
+          checkFavoriteStatus();
+        }
+    }, [contentId, contentTypeId, isLogin]);
 
     const handleReviewSubmit = async (rating: number, content: string) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -135,6 +157,44 @@ const TourDetailPage = () => {
         }
     };
 
+    const handleToggleFavorite = async () => {
+        if (!isLogin) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !contentId || !contentTypeId || !common) return;
+
+        if (isFavorited) {
+            const { error } = await supabase
+                .from('favorites')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('content_id', contentId);
+            if (error) {
+                alert(`찜 취소 실패: ${error.message}`);
+            } else {
+                alert('찜 목록에서 삭제되었습니다.');
+                setIsFavorited(false);
+            }
+        } else {
+            const newFavorite = {
+                user_id: user.id,
+                content_id: contentId,
+                content_type_id: contentTypeId,
+                title: common.title,
+                first_image: common.firstimage || null,
+            };
+            const { error } = await supabase.from('favorites').insert(newFavorite);
+            if (error) {
+                alert(`찜하기 실패: ${error.message}`);
+            } else {
+                alert('찜 목록에 추가되었습니다.');
+                setIsFavorited(true);
+            }
+        }
+    };
+
     if (loading) return <p className="text-center p-10">로딩 중...</p>;
     if (!common) return <p className="text-center p-10 text-red-500">데이터를 불러올 수 없습니다.</p>;
 
@@ -142,7 +202,7 @@ const TourDetailPage = () => {
         <div className="p-4 bg-gray-50 min-h-screen">
             <div className="max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-2xl font-bold">관광지 상세 정보</h1>
+                    <h1 className="text-2xl font-bold">{common?.title || '관광지 상세 정보'}</h1>
                     {planId && visitDay && (
                         <button
                             onClick={handleAddToPlan}
@@ -159,6 +219,22 @@ const TourDetailPage = () => {
                     repeatInfo={repeatInfo}
                 />
                 
+                {isLogin && (
+                    <div className="mt-8 mb-8 p-4 bg-white rounded-xl shadow flex items-center justify-center space-x-2">
+                        <button 
+                            onClick={handleToggleFavorite}
+                            className="flex items-center space-x-2 text-lg font-semibold text-gray-700 hover:text-red-500 transition-colors"
+                        >
+                            <span>
+                                {isFavorited ? '내 찜 리스트에서 삭제' : '내 찜리스트에 추가하기'}
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 transition-colors ${isFavorited ? 'text-red-500 fill-current' : 'text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+
                 <div className="mt-8 p-6 bg-white rounded-xl shadow">
                     <h3 className="text-2xl font-bold mb-4">리뷰 ({reviews.length}개)</h3>
                     <ReviewList reviews={reviews} />
