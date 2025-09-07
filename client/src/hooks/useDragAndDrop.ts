@@ -15,6 +15,7 @@ export function useDragAndDrop(spots: Spot[], setSpots: React.Dispatch<React.Set
     e.preventDefault();
   };
 
+  // [수정됨] DB에 먼저 저장하고, 성공 시에만 화면을 업데이트하는 방식으로 변경
   const handleDrop = async (droppedOnItemId: string) => {
     if (!draggedItemId || draggedItemId === droppedOnItemId) {
       setDraggedItemId(null);
@@ -40,20 +41,18 @@ export function useDragAndDrop(spots: Spot[], setSpots: React.Dispatch<React.Set
     const [movedItem] = reorderedDaySpots.splice(oldIndex, 1);
     reorderedDaySpots.splice(newIndex, 0, movedItem);
 
+    // 1. DB에 업데이트할 데이터를 먼저 준비
+    const updates = reorderedDaySpots.map((spot, index) => ({
+      id: spot.id,
+      visit_order: index,
+    }));
+
     try {
-      const updatePromises = reorderedDaySpots.map((spot, index) =>
-        supabase
-          .from('plan_spots')
-          .update({ visit_order: index })
-          .eq('id', spot.id) 
-      );
+      // 2. DB에 변경된 순서를 먼저 저장 (await로 완료까지 기다림)
+      const { error } = await supabase.from('plan_spots').upsert(updates);
+      if (error) throw error; // 에러가 발생하면 catch 블록으로 이동
 
-      const results = await Promise.all(updatePromises);
-
-      const firstError = results.find(res => res.error);
-      if (firstError) throw firstError.error;
-
-
+      // 3. DB 저장이 성공했을 때만 화면(state)을 업데이트
       const newFullSpotsList = [...spotsForOtherDays, ...reorderedDaySpots].sort((a, b) => {
           if (a.visit_day === b.visit_day) {
               const aOrder = reorderedDaySpots.findIndex(s => s.id === a.id);
@@ -66,7 +65,8 @@ export function useDragAndDrop(spots: Spot[], setSpots: React.Dispatch<React.Set
 
     } catch (error: any) {
       console.error("순서 업데이트 실패:", error);
-      alert(`순서 변경 실패: ${error.message}`);
+      alert(`순서 변경에 실패했습니다: ${error.message}`);
+      // DB 저장이 실패했으므로 화면은 변경하지 않음
     } finally {
       setDraggedItemId(null);
     }

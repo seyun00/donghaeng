@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { FetchDetailCommonInfo } from '../api/FetchTourApi';
 import { Link } from 'react-router-dom';
 
-// 타입을 export하여 외부에서 사용할 수 있도록 함
 export interface Spot {
   id: string;
   tour_api_content_id: string;
@@ -14,12 +13,11 @@ export interface Spot {
   visit_order: number;
 }
 
-// props 정의
 interface PlanSpotItemProps {
   spot: Spot;
   isDragging: boolean;
-  // [수정됨] onSpotClick prop에 day: number 추가
   onSpotClick: (mapy: string, mapx: string, day: number) => void;
+  onDeleteSpot: (spotId: string, spotTitle: string) => void; // [추가됨]
   handleDragStart: (spotId: string) => void;
   handleDragOver: (e: React.DragEvent<HTMLLIElement>, spotId: string) => void;
   handleDrop: (spotId: string) => void;
@@ -34,7 +32,7 @@ interface SpotDetails {
 }
 
 const PlanSpotItem: React.FC<PlanSpotItemProps> = ({ 
-  spot, isDragging, onSpotClick, handleDragStart, handleDragOver, handleDrop, handleDragEnd 
+  spot, isDragging, onSpotClick, onDeleteSpot, handleDragStart, handleDragOver, handleDrop, handleDragEnd 
 }) => {
   const [details, setDetails] = useState<SpotDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,13 +59,16 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
     fetchDetails();
   }, [spot.tour_api_content_id]);
   
-  // [수정됨] 클릭 시 좌표와 함께 '일차' 정보도 부모에게 전달
   const handleClick = () => {
     if (details?.mapy && details?.mapx) {
       onSpotClick(details.mapy, details.mapx, spot.visit_day);
     }
   };
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 부모의 onClick 이벤트(지도 이동)가 실행되지 않도록 함
+    onDeleteSpot(spot.id, details?.title || '이 관광지');
+  };
 
   if (loading) {
     return <li style={{ padding: '10px', borderBottom: '1px solid #eee' }}>정보를 불러오는 중...</li>;
@@ -85,7 +86,7 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
       onDragEnd={handleDragEnd}
       onClick={handleClick}
       style={style}
-      title="클릭하면 지도를 이동합니다. 드래그하여 순서를 바꾸세요."
+      title="클릭하면 지도 이동, 드래그하여 순서 변경"
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', borderBottom: '1px solid #eee' }}>
         <img 
@@ -93,7 +94,7 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
           alt={details.title} 
           style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
         />
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <Link 
             to={`/detail/${spot.tour_api_content_id}/${spot.content_type_id}?planId=${spot.plan_id}`} 
             target="_blank"
@@ -103,6 +104,14 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
             {details.title}
           </Link>
         </div>
+        {/* [추가됨] 삭제 버튼 */}
+        <button 
+            onClick={handleDeleteClick}
+            style={{ background: 'none', border: 'none', color: '#aaa', fontSize: '20px', cursor: 'pointer', padding: '0 5px' }}
+            title="목록에서 삭제"
+        >
+            &times;
+        </button>
       </div>
     </li>
   );
