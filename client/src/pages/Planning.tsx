@@ -8,12 +8,22 @@ import PlanSpotItem, { Spot } from '../components/PlanSpotItem';
 import { FetchDetailCommonInfo } from '../api/FetchTourApi';
 import NumberedMarker from '../components/Marker';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
+import Chatting from '../components/Chatting';
+import AddFriendsToPlanning from '../components/AddFriendToPlanning';
+import PlanMembersList from '../components/PlanMembersList';
 
 export interface EnrichedSpot extends Spot {
   mapx?: string;
   mapy?: string;
 }
 
+type UserInfo = {
+  user_id: string;
+  nickname: string;
+  profile_url?: string;
+};
+
+// --- 좌측 패널 컴포넌트 ---
 const VisitListPanel = ({
   spotsByDay,
   planId,
@@ -21,7 +31,7 @@ const VisitListPanel = ({
   draggedItemId,
   onSpotClick,
   onDayViewChange,
-  onDeleteSpot,
+  onDeleteSpot, // [추가됨]
   handleDragStart,
   handleDragOver,
   handleDrop,
@@ -33,7 +43,7 @@ const VisitListPanel = ({
   draggedItemId: string | null;
   onSpotClick: (mapy: string, mapx: string, day: number) => void;
   onDayViewChange: (day: number) => void;
-  onDeleteSpot: (spotId: string, spotTitle: string) => void;
+  onDeleteSpot: (spotId: string, spotTitle: string) => void; // [추가됨]
   handleDragStart: (spotId: string) => void;
   handleDragOver: (e: React.DragEvent<HTMLLIElement>, spotId: string) => void;
   handleDrop: (spotId: string) => void;
@@ -75,7 +85,7 @@ const VisitListPanel = ({
                   spot={spot}
                   isDragging={draggedItemId === spot.id}
                   onSpotClick={onSpotClick}
-                  onDeleteSpot={onDeleteSpot}
+                  onDeleteSpot={onDeleteSpot} // [추가됨]
                   handleDragStart={handleDragStart}
                   handleDragOver={handleDragOver}
                   handleDrop={handleDrop}
@@ -93,6 +103,7 @@ const VisitListPanel = ({
 // --- 메인 여행 계획 페이지 ---
 export default function Planning() {
   const { planId } = useParams<{ planId: string }>();
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
   const mapElement = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<any>(null);
   const [spots, setSpots] = useState<EnrichedSpot[]>([]);
@@ -102,6 +113,8 @@ export default function Planning() {
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const markersRef = useRef<any[]>([]);
   const polylineRef = useRef<any>(null);
+  const [membersOpen, setMembersOpen] = useState(false);
+  const [addFriendOpen, setAddFriendOpen] = useState(false);
 
   const { draggedItemId, handleDragStart, handleDragOver, handleDrop, handleDragEnd } = useDragAndDrop(spots, setSpots);
 
@@ -119,6 +132,7 @@ export default function Planning() {
       setLoading(false);
       return;
     }
+
     const loadPlanData = async () => {
       setLoading(true);
       setError(null);
@@ -146,6 +160,7 @@ export default function Planning() {
         } else {
           setSpots([]);
         }
+
       } catch (err: any) {
         console.error("여행 계획 로딩 실패:", err);
         setError("여행 계획을 불러오는 데 실패했습니다.");
@@ -156,38 +171,11 @@ export default function Planning() {
       }
     };
     loadPlanData();
-    
-    // [수정됨] 관광지 실시간 구독 로직 개선
-    const channel = supabase.channel(`plan-spots-channel-${planId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'plan_spots', filter: `plan_id=eq.${planId}` },
-        async (payload) => {
-          console.log('새로운 장소 추가 감지:', payload.new);
-          const newSpot = payload.new as Spot;
-          const details = await FetchDetailCommonInfo(newSpot.tour_api_content_id);
-          const newEnrichedSpot = { ...newSpot, mapx: details?.mapx, mapy: details?.mapy };
-          
-          setSpots(currentSpots => [...currentSpots, newEnrichedSpot]
-            .sort((a, b) => a.visit_day - b.visit_day || a.visit_order - b.visit_order)
-          );
-        }
-      )
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'plan_spots', filter: `plan_id=eq.${planId}` },
-        (payload) => {
-          console.log('장소 순서 변경 감지:', payload.new);
-          setSpots(currentSpots => currentSpots
-            .map(spot => spot.id === payload.new.id ? { ...spot, ...payload.new } : spot)
-            .sort((a, b) => a.visit_day - b.visit_day || a.visit_order - b.visit_order)
-          );
-        }
-      )
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'plan_spots', filter: `plan_id=eq.${planId}` },
-        (payload) => {
-          console.log('장소 삭제 감지:', payload.old.id);
-          setSpots(currentSpots => currentSpots.filter(spot => spot.id !== payload.old.id));
-        }
-      )
-      .subscribe();
 
+    const channel = supabase.channel(`plan-spots-channel-${planId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'plan_spots', filter: `plan_id=eq.${planId}` },
+        () => loadPlanData()
+      ).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [planId]);
 
@@ -206,7 +194,7 @@ export default function Planning() {
   useEffect(() => {
     if (loading) return;
     const { naver } = window;
-    if (!mapInstance.current || !spots || !naver) return;
+    if (!mapElement.current || !spots || !naver) return;
 
     const map = mapInstance.current;
     
@@ -233,7 +221,9 @@ export default function Planning() {
         const position = new naver.maps.LatLng(spot.mapy, spot.mapx);
         polylinePath.push(position);
         const marker = new naver.maps.Marker({
-          position, map, title: `Spot ${index + 1}`,
+          position,
+          map,
+          title: `Spot ${index + 1}`,
           icon: {
             content: ReactDOMServer.renderToStaticMarkup(<NumberedMarker number={index + 1} />),
             anchor: new naver.maps.Point(15, 15),
@@ -256,6 +246,7 @@ export default function Planning() {
     if (newMarkers.length > 0) {
       map.panToBounds(bounds);
     }
+
   }, [spots, loading, selectedDay]);
 
   const spotsByDay = useMemo(() => {
@@ -267,14 +258,30 @@ export default function Planning() {
     }, {} as Record<number, EnrichedSpot[]>);
   }, [spots]);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUser({
+          user_id: user.id,
+          nickname: user.user_metadata?.nickname || '익명',
+          profile_url: user.user_metadata?.avatar_url,
+        });
+      }
+    };
+    fetchUser();
+  }, []);
+
   const handleSpotClick = (mapy: string, mapx: string, day: number) => {
     setSelectedDay(day);
+
     if (mapInstance.current && mapy && mapx) {
       const position = new window.naver.maps.LatLng(Number(mapy), Number(mapx));
       mapInstance.current.panTo(position);
     }
   };
 
+  // [추가됨] 방문지 삭제 핸들러 함수
   const handleDeleteSpot = async (spotId: string, spotTitle: string) => {
     if (!window.confirm(`'${spotTitle}'을(를) 정말 삭제하시겠습니까?`)) {
         return;
@@ -289,19 +296,37 @@ export default function Planning() {
         alert(`삭제에 실패했습니다: ${error.message}`);
     } else {
         alert('방문지가 삭제되었습니다.');
-        // 실시간 구독이 UI를 업데이트하므로 여기서는 상태를 직접 변경하지 않습니다.
+        setSpots(prevSpots => prevSpots.filter(spot => spot.id !== spotId));
     }
   };
-
+  
   if (loading) return <p>여행 계획을 불러오는 중...</p>;
   if (error) return <div><p>{error}</p><Link to="/">홈으로</Link></div>;
   if (!planId || !plan) return <div><p>표시할 여행 계획이 없습니다.</p><Link to="/">홈으로</Link></div>;
+  if (!currentUser) return <p>사용자 정보를 불러오는 중...</p>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <header style={{ padding: '15px', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between' }}>
-        <h2>{plan.plan_name || '여행 계획'}</h2>
-        <div><button>친구 초대하기</button></div>
+        <div>
+          <span><Link to="/" >동행</Link></span>
+          <span className='ml-8'>{plan.plan_name || '여행 계획'}</span>
+        </div>
+        <div>
+          <button className="mr-8" onClick={() => setMembersOpen(true)}>멤버 목록</button>
+          <button onClick={() => setAddFriendOpen(true)}>친구 초대하기</button>
+        </div>
+        <PlanMembersList
+          open={membersOpen}
+          onClose={() => setMembersOpen(false)}
+          planId={planId!}
+        />
+        <AddFriendsToPlanning
+            open={addFriendOpen}
+            onClose={() => setAddFriendOpen(false)}
+            currentUserId={currentUser.user_id}
+            planId={planId}
+          />
       </header>
       <div style={{ display: 'flex', flex: 1, height: 'calc(100vh - 65px)' }}>
         <VisitListPanel
@@ -311,7 +336,7 @@ export default function Planning() {
           draggedItemId={draggedItemId}
           onSpotClick={handleSpotClick}
           onDayViewChange={setSelectedDay}
-          onDeleteSpot={handleDeleteSpot}
+          onDeleteSpot={handleDeleteSpot} // [추가됨]
           handleDragStart={handleDragStart}
           handleDragOver={handleDragOver}
           handleDrop={handleDrop}
@@ -321,8 +346,8 @@ export default function Planning() {
           ref={mapElement} 
           style={{ flex: 1, width: '100%', height: '100%' }} 
         />
-        <div style={{ width: '350px', borderLeft: '1px solid #ddd', padding: '15px' }}>
-          채팅창 영역
+        <div style={{ width: '350px', borderLeft: '1px solid #ddd', padding: '0px' }}>
+          <Chatting planId={planId!} user={currentUser} />
         </div>
       </div>
     </div>
