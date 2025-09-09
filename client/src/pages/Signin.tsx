@@ -81,7 +81,7 @@ export default function Signin() {
         
         <div className="m-auto max-w-[300px] flex justify-between mb-2">
           <Link to="/signup" className="text-gray-400">회원가입</Link>
-          <Link to="" className="text-gray-400">아이디/비밀번호 찾기</Link>
+          <Link to="/findPw" className="text-gray-400">비밀번호 찾기</Link>
         </div>
         
         <div className="m-auto max-w-[300px] flex justify-around">
