@@ -1,44 +1,29 @@
 // /src/tools/Tour_list.tsx
 
 import { TouristSpot } from "../api/FetchTourApi";
+import TouristSpotItem from "./TouristSpotItem";
 
 interface TouristSpotListProps {
   spots: TouristSpot[];
   planId: string | null; 
-  visitDay: string | null; // [추가됨] visitDay prop 타입
+  visitDay: string | null;
 }
 
 export default function TouristSpotList({ spots, planId, visitDay }: TouristSpotListProps) {
-  if (spots.length === 0) return <p>결과가 없습니다.</p>;
+  if (spots.length === 0) {
+    return <p className="text-center text-gray-500 py-10">결과가 없습니다.</p>;
+  }
 
   return (
-    <ul>
-      {spots.map(({ id, name, imageUrl, description, contentTypeId }) => {
-
-        // [수정됨] 상세 페이지 URL 생성 로직
-        let detailUrl = `/detail/${id}/${contentTypeId}`;
-        if (planId) {
-          detailUrl += `?planId=${planId}`;
-          // visitDay가 있을 경우에만 URL에 추가
-          if (visitDay) {
-            detailUrl += `&day=${visitDay}`;
-          }
-        }
-
-        return (
-          <li key={id}>
-           <a
-              href={detailUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <h3>{name}</h3>
-            </a>
-            {imageUrl && <img src={imageUrl} alt={name} width={200} />}
-            <p>{description}</p>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {spots.map((spot) => (
+        <TouristSpotItem 
+          key={spot.id} 
+          spot={spot} 
+          planId={planId} 
+          visitDay={visitDay} 
+        />
+      ))}
+    </div>
   );
 }

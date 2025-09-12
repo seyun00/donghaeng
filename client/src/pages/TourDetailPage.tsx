@@ -202,15 +202,18 @@ const TourDetailPage = () => {
         <div className="p-4 bg-gray-50 min-h-screen">
             <div className="max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-2xl font-bold">{common?.title || '관광지 상세 정보'}</h1>
-                    {planId && visitDay && (
-                        <button
-                            onClick={handleAddToPlan}
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        >
-                            {visitDay}일차에 추가
-                        </button>
-                    )}
+                    {/* [수정됨] 관광지 이름 대신 고정된 페이지 제목을 표시 */}
+                    <h1 className="text-2xl font-bold">관광지 상세 정보</h1>
+                    <div className="flex items-center gap-2">
+                        {planId && visitDay && (
+                            <button
+                                onClick={handleAddToPlan}
+                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                            >
+                                {visitDay}일차에 추가
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <TourDetail
                     contentTypeId={Number(contentTypeId)}

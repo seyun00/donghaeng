@@ -104,7 +104,6 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
             {details.title}
           </Link>
         </div>
-        {/* [추가됨] 삭제 버튼 */}
         <button 
             onClick={handleDeleteClick}
             style={{ background: 'none', border: 'none', color: '#aaa', fontSize: '20px', cursor: 'pointer', padding: '0 5px' }}

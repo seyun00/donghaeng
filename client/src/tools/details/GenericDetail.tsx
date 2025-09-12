@@ -1,3 +1,5 @@
+// /src/tools/details/GenericDetail.tsx
+
 import React from 'react';
 import { detailLabels, specialFields } from './labelMap';
 
@@ -28,14 +30,21 @@ const GenericDetail: React.FC<GenericDetailProps> = ({ intro, title }) => {
     <div>
       <h3 className="text-xl font-semibold mt-6">{title}</h3>
       <ul className="mt-2 text-sm text-gray-700 space-y-2">
-        {displayableItems.map(([key, value]) => (
-          <li key={key} className="flex border-b pb-1">
-            <strong className="w-1/3 text-gray-600">{detailLabels[key]}</strong>
-            <span className="w-2/3">
-              {specialFields[key] ? specialFields[key](value) : value}
-            </span>
-          </li>
-        ))}
+        {displayableItems.map(([key, value]) => {
+          // specialFields에 정의된 함수가 있으면 먼저 적용
+          const processedValue = specialFields[key] ? specialFields[key](value) : value;
+          
+          return (
+            <li key={key} className="flex border-b pb-1">
+              <strong className="w-1/3 text-gray-600">{detailLabels[key]}</strong>
+              {/* [수정됨] dangerouslySetInnerHTML을 사용하여 HTML 태그를 렌더링 */}
+              <span 
+                className="w-2/3"
+                dangerouslySetInnerHTML={{ __html: processedValue }} 
+              />
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

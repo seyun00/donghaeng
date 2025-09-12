@@ -5,7 +5,6 @@
 export const detailLabels: { [key: string]: string } = {
   // 관광지 (contentTypeId=12)
   accomcount: "수용인원",
-  chkbabycarriage: "유모차 대여 정보",
   chkcreditcard: "신용카드 가능 정보",
   chkpet: "애완동물 동반가능 정보",
   expagerange: "체험 가능 연령",
@@ -19,17 +18,14 @@ export const detailLabels: { [key: string]: string } = {
 
   // 문화시설 (contentTypeId=14)
   accomcountculture: "수용인원 ",
-  chkbabycarriageculture: "유모차 대여 정보 ",
   chkcreditcardculture: "신용카드 가능 정보 ",
   chkpetculture: "애완동물 동반가능 정보 ",
-  discountinfo: "할인 정보 ",
   infocenterculture: "문의 및 안내 ",
   parkingculture: "주차 시설 ",
   parkingfee: "주차 요금 ",
   restdateculture: "쉬는 날 ",
   usefee: "이용 요금 ",
   usetimeculture: "이용 시간 ",
-  scale: "규모 ",
   spendtime: "관람 소요시간 ",
 
   // 행사/공연/축제 (contentTypeId=15)
@@ -61,7 +57,6 @@ export const detailLabels: { [key: string]: string } = {
 
   // 레포츠 (contentTypeId=28)
   accomcountleports: "수용인원",
-  chkbabycarriageleports: "유모차 대여 정보",
   chkcreditcardleports: "신용카드 가능 정보",
   chkpetleports: "애완동물 동반가능 정보",
   expagerangeleports: "체험 가능 연령",
@@ -96,7 +91,6 @@ export const detailLabels: { [key: string]: string } = {
   refundregulation: "환불 규정",
 
   // 쇼핑 (contentTypeId=38)
-  chkbabycarriageshopping: "유모차 대여 정보",
   chkpetshopping: "애완동물 동반가능 정보",
   culturecenter: "문화센터 바로가기",
   fairday: "장서는 날",
@@ -105,10 +99,8 @@ export const detailLabels: { [key: string]: string } = {
   opentime: "영업 시간",
   parkingshopping: "주차 시설",
   restdateshopping: "쉬는 날",
-  restroom: "화장실 ",
   saleitem: "판매 품목",
   saleitemcost: "판매 품목별 가격",
-  scaleshopping: "규모",
   shopguide: "매장 안내",
 
   // 음식점 (contentTypeId=39)
@@ -127,7 +119,6 @@ export const detailLabels: { [key: string]: string } = {
   seat: "좌석 수",
   smoking: "금연/흡연 여부",
   treatmenu: "취급 메뉴",
-  lcnsno: "인허가번호",
 };
 
 // 특별한 포맷팅이 필요한 필드를 관리
