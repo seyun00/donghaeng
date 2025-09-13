@@ -89,11 +89,20 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
       title="클릭하면 지도 이동, 드래그하여 순서 변경"
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', borderBottom: '1px solid #eee' }}>
-        <img 
+        {details.firstimage ? 
+          <img 
+            src={details.firstimage || 'https://via.placeholder.com/80x60.png?text=No+Image'} 
+            alt={details.title} 
+            style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
+          /> : 
+          <div style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px', backgroundColor:'#EBEBEB', position:'relative'}}>
+            <span className='absolute text-xs top-[22px] left-[10px] text-gray-400'>이미지 없음</span>
+          </div>}
+        {/* <img 
           src={details.firstimage || 'https://via.placeholder.com/80x60.png?text=No+Image'} 
           alt={details.title} 
           style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
-        />
+        /> */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <Link 
             to={`/detail/${spot.tour_api_content_id}/${spot.content_type_id}?planId=${spot.plan_id}`} 
