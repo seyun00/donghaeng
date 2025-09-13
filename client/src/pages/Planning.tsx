@@ -11,6 +11,7 @@ import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import Chatting from '../components/Chatting';
 import AddFriendsToPlanning from '../components/AddFriendToPlanning';
 import PlanMembersList from '../components/PlanMembersList';
+import BudgetList from '../components/BudgetList';
 
 export interface EnrichedSpot extends Spot {
   mapx?: string;
@@ -57,6 +58,28 @@ const VisitListPanel = ({
     }
   };
 
+  const [totalBudget, setTotalBudget] = useState(0);
+  
+  const fetchTotalBudget = async () => {
+    if (!planId) return;
+    const { data, error } = await supabase
+      .from('budgets')
+      .select('cost')
+      .eq('plan_id', planId);
+    if (data) {
+      const sum = data.reduce((acc, curr) => acc + (curr.cost || 0), 0);
+      setTotalBudget(sum);
+    }
+  };
+  
+  useEffect(() => {
+    fetchTotalBudget();
+  }, [planId]);
+
+  const handleBudgetAdded = () => {
+    fetchTotalBudget();
+  };
+
   return (
     <div style={{ width: '350px', borderRight: '1px solid #ddd', padding: '15px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -93,8 +116,15 @@ const VisitListPanel = ({
                 />
               ))}
             </ul>
+            <div>
+              <BudgetList date={day} planId={planId} onBudgetAdded={handleBudgetAdded} />
+            </div>
           </div>
         ))}
+        <div className='bg-gray-200 rounded-[5px] px-2 pb-1 shadow-[1px_1px_5px_1px_rgba(0,0,0,0.2)] mx-1 mb-2'>
+          <p className='py-2 text-sm text-center'>총 예산</p>
+          <p className='text-center'>{totalBudget.toLocaleString()} 원</p>
+        </div>
       </div>
     </div>
   );
