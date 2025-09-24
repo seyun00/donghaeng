@@ -27,7 +27,7 @@ export default function RoutesSetup() {
       </Route>
       <Route path="/planning/:planId" element={<Planning editable={true} />} />
       <Route path="/shared/:planId" element={<Planning editable={false} />} />
-      <Route path="/placeInformation" element={<PlaceInformation/>}/>
+      <Route path="/placeInformation" element={<PlaceInformation />} />
       <Route path="/detail/:contentId/:contentTypeId" element={<TourDetailPage />} />
     </Routes>
   )

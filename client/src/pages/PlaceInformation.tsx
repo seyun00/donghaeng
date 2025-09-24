@@ -22,13 +22,16 @@ export default function PlaceInformation() {
   const [searchParams] = useSearchParams();
   const planId = searchParams.get('planId');
   const visitDay = searchParams.get('day'); 
+  const typeIdParam = searchParams.get('typeId');
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentRegionCode, setCurrentRegionCode] = useState<number | undefined>(11);
   const [regionSelected, setRegionSelected] = useState(false);
   const [currentSigunguCode, setCurrentSigunguCode] = useState<number | undefined>();
   const [sigunguSelected, setSigunguSelected] = useState(false);
-  const [currentContentsType, setCurrentContentsType] = useState(12);
+  const [currentContentsType, setCurrentContentsType] = useState(
+    typeIdParam ? parseInt(typeIdParam) : 12
+  );
   const [regionList, setRegionList] = useState<Region[]>([]);
   const [sigunguList, setSigunguList] = useState<Sigungu[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -83,22 +86,22 @@ export default function PlaceInformation() {
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">관광 장소 정보 페이지 </h1>
+    <div className="min-h-screen p-4 sm:p-6 md:p-8 bg-gray-50">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 sm:text-3xl">관광 장소 정보 페이지 </h1>
           <Link to="/">
-            <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md">
+            <button className="px-4 py-2 font-bold text-white transition-colors bg-blue-500 rounded-lg shadow-md hover:bg-blue-600">
               홈으로
             </button>
           </Link>
         </div>
 
-        <div className="space-y-6 bg-white p-6 rounded-xl shadow-lg">
+        <div className="p-6 space-y-6 bg-white shadow-lg rounded-xl">
           <SearchInput value={searchQuery} onChange={setSearchQuery} />
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-gray-700 mr-2">지역 선택 :</span>
+            <span className="mr-2 font-semibold text-gray-700">지역 선택 :</span>
             {regionList.map(item => (
               <AreaButton 
                 key={item.id} 
@@ -117,7 +120,7 @@ export default function PlaceInformation() {
 
           {regionSelected && sigunguList.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-gray-700 mr-2">시군구 선택 :</span>
+              <span className="mr-2 font-semibold text-gray-700">시군구 선택 :</span>
               {sigunguList.map(item => (
                 <SigunguButton 
                   key={item.id} 
@@ -133,7 +136,7 @@ export default function PlaceInformation() {
           )}
           
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-gray-700 mr-2">카테고리 선택 :</span>
+            <span className="mr-2 font-semibold text-gray-700">카테고리 선택 :</span>
             {contentsTypeList.map(item => (
               <ContentsTypeButton 
                 key={item.typeID} 
@@ -148,28 +151,28 @@ export default function PlaceInformation() {
           {currentContentsType === 15 && (
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <div>
-                <label htmlFor="event-start-date" className="font-semibold text-gray-700 mr-2">행사 시작일: </label>
+                <label htmlFor="event-start-date" className="mr-2 font-semibold text-gray-700">행사 시작일: </label>
                 <input 
                   type="date" 
                   id="event-start-date" 
                   value={formatDateForInput(eventStartDate)} 
                   onChange={handleDateChange} 
-                  className="border-gray-300 rounded-md shadow-sm p-2"
+                  className="p-2 border-gray-300 rounded-md shadow-sm"
                 />
               </div>
               
               <div>
-                <label htmlFor="event-end-date" className="font-semibold text-gray-700 mr-2">종료일 (선택): </label>
+                <label htmlFor="event-end-date" className="mr-2 font-semibold text-gray-700">종료일 (선택): </label>
                 <input 
                   type="date" 
                   id="event-end-date" 
                   value={eventEndDate ? formatDateForInput(eventEndDate) : ''} 
                   onChange={handleEndDateChange} 
-                  className="border-gray-300 rounded-md shadow-sm p-2"
+                  className="p-2 border-gray-300 rounded-md shadow-sm"
                 />
                 <button 
                   onClick={() => setEventEndDate(null)} 
-                  className="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-3 rounded-lg transition-colors text-sm"
+                  className="px-3 py-2 ml-2 text-sm font-semibold text-gray-800 transition-colors bg-gray-200 rounded-lg hover:bg-gray-300"
                 >
                   초기화
                 </button>
@@ -180,9 +183,9 @@ export default function PlaceInformation() {
         
         <div className="mt-8">
           {loading && <p className="text-center text-gray-500">로딩 중...</p>}
-          {error && <p className="text-center text-red-500 font-semibold">{error}</p>}
+          {error && <p className="font-semibold text-center text-red-500">{error}</p>}
           {!loading && !error && (
-            <p className="text-lg text-gray-600 mb-4"> 
+            <p className="mb-4 text-lg text-gray-600"> 
               총 <span className="font-bold text-blue-600">{filteredSpots.length}</span>개의 장소가 검색되었습니다.
             </p>
           )}

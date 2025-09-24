@@ -62,7 +62,7 @@ export default function Home() {
 
       <div className="text-center"><Link to="/placeInformation">관광지 정보 페이지</Link></div>
       <div className="text-center"><Link to="/plans">내 일정 관리</Link></div>
-      <div className="text-center"><Link to="/searchSharedPlan">공개 일정 검색</Link></div>
+      <div className="text-center"><Link to="/searchSharedPlan">공개 코스 검색</Link></div>
       
     </>
   )
