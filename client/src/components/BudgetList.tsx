@@ -7,10 +7,11 @@ interface BudgetItem {
   cost: number;
 }
 
-export default function BudgetList({ date, planId, onBudgetAdded }: {
+export default function BudgetList({ date, planId, onBudgetAdded, editable = true}: {
   date: number;
   planId: string | undefined;
   onBudgetAdded?: () => void;
+  editable: boolean;
 }) {
   const [budgets, setBudgets] = useState<BudgetItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,6 +76,7 @@ export default function BudgetList({ date, planId, onBudgetAdded }: {
   return (
     <div className='bg-gray-200 rounded-[5px] px-2 pb-1 shadow-[1px_1px_5px_1px_rgba(0,0,0,0.2)] mx-1'>
       <h4 className='py-2 text-sm text-center'>{date}일차 예산</h4>
+      {( editable && 
       <form className='flex mb-[10px] justify-between' onSubmit={handleAddBudget}>
         <input
           type="text"
@@ -94,6 +96,7 @@ export default function BudgetList({ date, planId, onBudgetAdded }: {
           <button type="submit" className='pb-1 text-2xl'>+</button>
         </div>
       </form>
+    )}
       {!loading &&
         (<ul className='p-0 m-0'>
           {budgets.length === 0 && <li className="text-xs">예산 항목이 없습니다.</li>}

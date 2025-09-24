@@ -22,6 +22,7 @@ interface PlanSpotItemProps {
   handleDragOver: (e: React.DragEvent<HTMLLIElement>, spotId: string) => void;
   handleDrop: (spotId: string) => void;
   handleDragEnd: () => void;
+  editable: boolean;
 }
 
 interface SpotDetails {
@@ -32,7 +33,7 @@ interface SpotDetails {
 }
 
 const PlanSpotItem: React.FC<PlanSpotItemProps> = ({ 
-  spot, isDragging, onSpotClick, onDeleteSpot, handleDragStart, handleDragOver, handleDrop, handleDragEnd 
+  spot, isDragging, onSpotClick, onDeleteSpot, handleDragStart, handleDragOver, handleDrop, handleDragEnd, editable = true, 
 }) => {
   const [details, setDetails] = useState<SpotDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,15 +80,15 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
 
   return (
     <li
-      draggable="true"
-      onDragStart={() => handleDragStart(spot.id)}
-      onDragOver={(e) => handleDragOver(e, spot.id)}
-      onDrop={() => handleDrop(spot.id)}
-      onDragEnd={handleDragEnd}
-      onClick={handleClick}
-      style={style}
-      title="클릭하면 지도 이동, 드래그하여 순서 변경"
-    >
+    draggable={editable}  // editable이 false면 드래그 불가
+    onDragStart={editable ? () => handleDragStart(spot.id) : undefined}
+    onDragOver={editable ? (e) => handleDragOver(e, spot.id) : undefined}
+    onDrop={editable ? () => handleDrop(spot.id) : undefined}
+    onDragEnd={editable ? handleDragEnd : undefined}
+    onClick={handleClick}
+    style={style}
+    title={editable ? "클릭하면 지도 이동, 드래그하여 순서 변경" : "클릭하면 지도 이동"}
+  >
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', borderBottom: '1px solid #eee' }}>
         {details.firstimage ? 
           <img 
@@ -113,13 +114,13 @@ const PlanSpotItem: React.FC<PlanSpotItemProps> = ({
             {details.title}
           </Link>
         </div>
-        <button 
+        {editable && (<button 
             onClick={handleDeleteClick}
             style={{ background: 'none', border: 'none', color: '#aaa', fontSize: '20px', cursor: 'pointer', padding: '0 5px' }}
             title="목록에서 삭제"
         >
             &times;
-        </button>
+        </button>)}
       </div>
     </li>
   );

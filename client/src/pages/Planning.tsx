@@ -1,5 +1,3 @@
-// /src/pages/Planning.tsx
-
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ReactDOMServer from 'react-dom/server';
@@ -37,6 +35,7 @@ const VisitListPanel = ({
   handleDragOver,
   handleDrop,
   handleDragEnd,
+  editable = true,
 }: {
   spotsByDay: Record<number, EnrichedSpot[]>;
   planId: string | undefined;
@@ -49,6 +48,7 @@ const VisitListPanel = ({
   handleDragOver: (e: React.DragEvent<HTMLLIElement>, spotId: string) => void;
   handleDrop: (spotId: string) => void;
   handleDragEnd: () => void;
+  editable?: boolean;
 }) => {
   const handleAddSpotClick = (day: number) => {
     if (planId) {
@@ -93,13 +93,13 @@ const VisitListPanel = ({
               >
                 {day}일차 ({spotsByDay[day]?.length || 0}개)
               </h3>
-              <button 
+              {editable && (<button 
                 onClick={() => handleAddSpotClick(day)}
                 style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', padding: '0 10px' }}
                 title={`${day}일차에 방문지 추가`}
               >
                 +
-              </button>
+              </button>)}
             </div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {spotsByDay[day] && spotsByDay[day].map(spot => (
@@ -113,11 +113,12 @@ const VisitListPanel = ({
                   handleDragOver={handleDragOver}
                   handleDrop={handleDrop}
                   handleDragEnd={handleDragEnd}
+                  editable = {editable}
                 />
               ))}
             </ul>
             <div>
-              <BudgetList date={day} planId={planId} onBudgetAdded={handleBudgetAdded} />
+              <BudgetList date={day} planId={planId} onBudgetAdded={handleBudgetAdded} editable={editable} />
             </div>
           </div>
         ))}
@@ -131,13 +132,13 @@ const VisitListPanel = ({
 };
 
 // --- 메인 여행 계획 페이지 ---
-export default function Planning() {
+export default function Planning({ editable = true }: { editable?: boolean }) {
   const { planId } = useParams<{ planId: string }>();
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
   const mapElement = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<any>(null);
   const [spots, setSpots] = useState<EnrichedSpot[]>([]);
-  const [plan, setPlan] = useState<{ plan_name: string; start_date: string; end_date: string } | null>(null);
+  const [plan, setPlan] = useState<{ plan_name: string; start_date: string; end_date: string; shared?: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number>(1);
@@ -168,7 +169,7 @@ export default function Planning() {
       setError(null);
       try {
         const [planResult, spotsResult] = await Promise.all([
-          supabase.from('plans').select('plan_name, start_date, end_date').eq('id', planId).single(),
+          supabase.from('plans').select('plan_name, start_date, end_date, shared').eq('id', planId).single(),
           supabase.from('plan_spots').select('*').eq('plan_id', planId).order('visit_day').order('visit_order')
         ]);
         
@@ -329,6 +330,22 @@ export default function Planning() {
         setSpots(prevSpots => prevSpots.filter(spot => spot.id !== spotId));
     }
   };
+
+  // --- 공유 여부 토글 함수 ---
+  const handleToggleShared = async () => {
+    if (!planId || !plan) return;
+    if (!plan.shared && !window.confirm("여행 일정을 공개하시겠습니까?")) {
+      return;
+    }
+    const nextShared = !plan.shared;
+    const { error } = await supabase
+      .from('plans')
+      .update({ shared: nextShared })
+      .eq('id', planId);
+
+    if (!error) setPlan(prev => prev ? { ...prev, shared: nextShared } : prev);
+    else alert('일정 공유 상태 변경에 실패했습니다.');
+  };
   
   if (loading) return <p>여행 계획을 불러오는 중...</p>;
   if (error) return <div><p>{error}</p><Link to="/">홈으로</Link></div>;
@@ -338,13 +355,32 @@ export default function Planning() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <header style={{ padding: '15px', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between' }}>
-        <div>
+        <div className='flex items-center'>
           <span><Link to="/" >동행</Link></span>
           <span className='ml-8'>{plan.plan_name || '여행 계획'}</span>
+          {(!editable && <span className='ml-2 text-gray-400'>&lt;공유 화면&gt;</span>)}
         </div>
         <div>
-          <button className="mr-8" onClick={() => setMembersOpen(true)}>멤버 목록</button>
-          <button onClick={() => setAddFriendOpen(true)}>친구 초대하기</button>
+          {editable && plan && (
+            <button
+              onClick={handleToggleShared}
+              style={{
+                fontSize: '1rem',
+                padding: '6px 18px',
+                borderRadius: 18,
+                border: `1px solid ${plan.shared ? '#3b82f6' : '#ccc'}`,
+                background: plan.shared ? '#3b82f6' : '#eee',
+                color: plan.shared ? 'white' : '#666',
+                cursor: 'pointer',
+                marginRight: '14px'
+              }}
+              title={plan.shared ? '일정 공개 중' : '일정 비공개'}
+            >
+              {plan.shared ? '공개 🔓' : '비공개 🔒'}
+            </button>
+          )}
+          {editable && <button className="mr-8" onClick={() => setMembersOpen(true)}>멤버 목록</button>}
+          {editable && <button onClick={() => setAddFriendOpen(true)}>친구 초대하기</button>}
         </div>
         <PlanMembersList
           open={membersOpen}
@@ -371,13 +407,24 @@ export default function Planning() {
           handleDragOver={handleDragOver}
           handleDrop={handleDrop}
           handleDragEnd={handleDragEnd}
+          editable={editable}
         />
         <div 
           ref={mapElement} 
           style={{ flex: 1, width: '100%', height: '100%' }} 
         />
         <div style={{ width: '350px', borderLeft: '1px solid #ddd', padding: '0px' }}>
-          <Chatting planId={planId!} user={currentUser} />
+          {editable ? (
+            <Chatting planId={planId!} user={currentUser} />
+          ) : (
+            <div className='flex flex-col items-center justify-center h-full text-gray-400'>
+              {/* 자물쇠 아이콘 (Unicode) */}
+              <div style={{ fontSize: 64, marginBottom: 16 }}>🔒</div>
+              <div style={{ fontSize: 16, fontWeight: 'bold' }}>
+                공유 화면에서는 채팅 확인이 불가합니다.
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

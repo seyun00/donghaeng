@@ -10,6 +10,7 @@ import FindPw from "./pages/FindPw";
 import ResetPw from "./pages/ResetPw";
 import MyPage from "./pages/MyPage";
 import PlanManagement from "./pages/PlanManagement";
+import SearchSharedPlan from "./pages/SearchSharedPlan";
 
 export default function RoutesSetup() {
   return (
@@ -22,8 +23,10 @@ export default function RoutesSetup() {
         <Route path="resetPw" element={<ResetPw/>}/>
         <Route path="mypage" element={<MyPage/>}/>
         <Route path="plans" element={<PlanManagement />} />
+        <Route path="searchSharedPlan" element={<SearchSharedPlan/>}/>
       </Route>
-      <Route path="/planning/:planId" element={<Planning/>}/>
+      <Route path="/planning/:planId" element={<Planning editable={true} />} />
+      <Route path="/shared/:planId" element={<Planning editable={false} />} />
       <Route path="/placeInformation" element={<PlaceInformation/>}/>
       <Route path="/detail/:contentId/:contentTypeId" element={<TourDetailPage />} />
     </Routes>
