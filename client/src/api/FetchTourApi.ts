@@ -130,7 +130,6 @@ export async function FetchEvents(
     eventEndDate,
     lDongRegnCd: lDongRegnCd?.toString(),
     lDongSignguCd: lDongSignguCd?.toString(),
-   
   };
 
   const data = await apiClient('searchFestival2', params);
@@ -144,5 +143,56 @@ export async function FetchEvents(
     location: item.addr1 || '위치 정보 없음',
     contentTypeId: item.contenttypeid?.toString() || '15', 
     eventStartDate: item.eventstartdate, 
+  }));
+}
+
+export async function FetchPopularInArea(
+  areaCode: string,
+  sigunguCode: string,
+  contentTypeId: string
+): Promise<TouristSpot[]> {
+  const params = {
+    numOfRows: '6',
+    pageNo: '1',
+    arrange: 'B',
+    areaCode: areaCode,
+    sigunguCode: sigunguCode,
+    contentTypeId: contentTypeId,
+  };
+  const data = await apiClient('areaBasedList2', params);
+  const items = data.response?.body?.items?.item ?? [];
+  return items.map((item: any) => ({
+    id: item.contentid,
+    name: item.title,
+    description: item.addr1 || '설명 없음',
+    imageUrl: item.firstimage || '',
+    location: item.addr1 || '위치 정보 없음',
+    contentTypeId: item.contenttypeid?.toString() || '',
+  }));
+}
+
+export async function FetchNearbySpots(
+  mapx: string,
+  mapy: string,
+  contentTypeId: string
+): Promise<TouristSpot[]> {
+  const params = {
+    numOfRows: '6',
+    pageNo: '1',
+    arrange: 'E',
+    mapX: mapx,
+    mapY: mapy,
+    radius: '10000',
+    contentTypeId: contentTypeId,
+  };
+  const data = await apiClient('locationBasedList2', params);
+  const items = data.response?.body?.items?.item ?? [];
+  return items.map((item: any) => ({
+    id: item.contentid,
+    name: item.title,
+    description: item.addr1 || '설명 없음',
+    imageUrl: item.firstimage || '',
+    location: item.addr1 || '위치 정보 없음',
+    contentTypeId: item.contenttypeid?.toString() || '',
   }));
 }
