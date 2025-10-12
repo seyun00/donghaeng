@@ -123,8 +123,10 @@ export default function Header() {
   return (
     <>
       <div className="border-b-2 border-gray-100">
-        <div className="py-[10px] px-[20px] flex justify-between max-w-[1024px] m-auto">
-          <Link to="/">동행</Link>
+        <div className="py-[10px] px-[20px] flex justify-between max-w-[1024px] m-auto items-center">
+          <Link to="/">
+            <img src="/icons/logo.png" alt="" className="w-14"/>
+          </Link>
           
           <div>
             {!isLogin ? (

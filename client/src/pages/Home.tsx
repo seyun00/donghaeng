@@ -3,7 +3,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import supabase from "../api/supabaseClient";
 import useSession from "../hooks/useSesstion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Carousel from "../components/Carousel";
+import Banner from "../components/Banner";
 
 // Plan 타입 정의
 interface Plan {
@@ -17,14 +19,14 @@ interface Plan {
 const PlanCard = ({ plan }: { plan: Plan }) => {
   return (
     <Link to={`/planning/${plan.id}`} className="block">
-      <div className="border rounded-lg p-4 h-48 flex flex-col justify-between shadow-md hover:shadow-lg transition-shadow bg-white">
+      <div className="flex flex-col justify-between h-48 p-4 transition-shadow bg-white border rounded-lg shadow-md hover:shadow-lg">
         <div>
           <h3 className="text-lg font-bold truncate">{plan.plan_name}</h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="mt-1 text-sm text-gray-500">
             {plan.start_date} ~ {plan.end_date}
           </p>
         </div>
-        <button className="w-full py-2 text-sm font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors">
+        <button className="w-full py-2 text-sm font-semibold text-white transition-colors bg-blue-500 rounded-md hover:bg-blue-600">
           계획 보기
         </button>
       </div>
@@ -99,62 +101,56 @@ export default function Home() {
   }, [isLogin]);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div className="min-h-screen p-8 bg-gray-50">
       <div className="max-w-5xl mx-auto">
         
-        {!loading &&
-          <div className="mb-8 text-center">
-            {isLogin ? (
-              <p className="text-xl">
-                <span className="font-semibold text-indigo-600">{nickname}</span>님, 환영합니다!
+        {!loading && !isLogin && (
+          <>
+            <Carousel />
+            <div className="mb-8 text-center">
+              <p className="text-lg">
+                국내 여행에 관한 모든 정보를 한 곳에서, <br />
+                일정 계획부터 관광지 추천까지 모두 경험해보세요!
               </p>
-            ) : (
-              <p className="text-lg">여행 계획을 시작하려면 <Link to="/signin" className="text-blue-500 hover:underline">로그인</Link>이 필요합니다.</p>
-            )}
-          </div>
-        }
+            </div>
+            <div className="mb-8 text-center">
+            <p className="text-lg">
+              여행 계획을 시작하려면{" "}
+              <Link to="/signin" className="text-blue-500 hover:underline">로그인</Link>이 필요합니다.
+            </p>
+            </div>
+          <Banner/>
+          </>
+        )}
         
         {/* 로그인 시에만 내 여행 일정 섹션 표시 */}
         {isLogin && !loading && (
-          <div className="mb-12">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">내 여행 일정</h2>
-              <Link to="/plans">
-                <button className="px-4 py-2 text-sm font-semibold text-white bg-green-500 rounded-md hover:bg-green-600 transition-colors">
-                  새 계획 만들기
-                </button>
-              </Link>
+          <>
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">내 여행 일정</h2>
+                <Link to="/plans">
+                  <button className="px-4 py-2 text-sm font-semibold text-white transition-colors bg-green-500 rounded-md hover:bg-green-600">
+                    새 계획 만들기
+                  </button>
+                </Link>
+              </div>
+              {plans.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {plans.map(plan => (
+                    <PlanCard key={plan.id} plan={plan} />
+                  ))}
+                </div>
+              ) : (
+                <div className="py-10 text-center bg-white rounded-lg shadow-sm">
+                  <p className="text-gray-500">아직 참여중인 여행 계획이 없습니다.</p>
+                </div>
+              )}
             </div>
-            {plans.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {plans.map(plan => (
-                  <PlanCard key={plan.id} plan={plan} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10 bg-white rounded-lg shadow-sm">
-                <p className="text-gray-500">아직 참여중인 여행 계획이 없습니다.</p>
-              </div>
-            )}
-          </div>
+            <Banner/>
+          </>
         )}
-
-        {/* qㅓ튼 링크 */}
-        <div className="p-6 bg-white rounded-lg shadow-sm">
-            <h2 className="text-2xl font-bold mb-4">관광 정보 검색</h2>
-            <div className="flex justify-center items-center gap-6">
-              <Link to="/placeInformation">
-                <button className="px-8 py-3 text-lg font-semibold text-white bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-700 transition-transform hover:scale-105">
-                  관광지 정보
-                </button>
-              </Link>
-              <Link to="/searchSharedPlan">
-                <button className="px-8 py-3 text-lg font-semibold text-white bg-teal-500 rounded-lg shadow-md hover:bg-teal-600 transition-transform hover:scale-105">
-                  공유 코스 검색
-                </button>
-              </Link>
-            </div>
-        </div>
+        
       </div>
     </div>
   );
