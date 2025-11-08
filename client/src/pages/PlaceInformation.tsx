@@ -9,7 +9,8 @@ import Pagination from "../components/Pagination";
 import AreaButton, { Region } from "../components/AreaButton";
 import ContentsTypeButton, { contentsTypeList } from "../components/ContentsTypeButton";
 import SigunguButton, { Sigungu } from "../components/SigunguButton";
-import { FetchLDongRegions, FetchLDongSigungus } from "../api/FetchTourApi";
+// FetchCategoryMap을 import
+import { FetchLDongRegions, FetchLDongSigungus, FetchCategoryMap, CategoryMap } from "../api/FetchTourApi"; 
 
 const formatDateForInput = (date: Date): string => {
   const year = date.getFullYear();
@@ -40,6 +41,8 @@ export default function PlaceInformation() {
   const [eventStartDate, setEventStartDate] = useState(new Date('2024-01-01'));
   const [eventEndDate, setEventEndDate] = useState<Date | null>(null);
 
+  const [categoryMap, setCategoryMap] = useState<CategoryMap>({});
+
   const { spots, loading, error } = useTouristSpots(
     currentContentsType,
     currentRegionCode,
@@ -61,7 +64,10 @@ export default function PlaceInformation() {
     [filteredSpots, currentPage, itemsPerPage]
   );
 
-  useEffect(() => { FetchLDongRegions().then(setRegionList); }, []);
+  useEffect(() => { 
+    FetchLDongRegions().then(setRegionList); 
+    FetchCategoryMap().then(setCategoryMap);
+  }, []); 
   
   useEffect(() => {
     if (currentRegionCode && regionSelected) {
@@ -191,7 +197,12 @@ export default function PlaceInformation() {
           )}
 
           
-          <TouristSpotList spots={currentSpots} planId={planId} visitDay={visitDay} />
+          <TouristSpotList 
+            spots={currentSpots} 
+            planId={planId} 
+            visitDay={visitDay}
+            categoryMap={categoryMap}
+          />
 
           <Pagination
             currentPage={currentPage}

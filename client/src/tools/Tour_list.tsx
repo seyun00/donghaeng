@@ -1,15 +1,16 @@
 // /src/tools/Tour_list.tsx
 
-import { TouristSpot } from "../api/FetchTourApi";
+import { TouristSpot, CategoryMap } from "../api/FetchTourApi"; // [수정됨] CategoryMap 임포트
 import TouristSpotItem from "./TouristSpotItem";
 
 interface TouristSpotListProps {
   spots: TouristSpot[];
   planId: string | null; 
   visitDay: string | null;
+  categoryMap: CategoryMap; // [추가됨] 카테고리 맵 prop
 }
 
-export default function TouristSpotList({ spots, planId, visitDay }: TouristSpotListProps) {
+export default function TouristSpotList({ spots, planId, visitDay, categoryMap }: TouristSpotListProps) {
   if (spots.length === 0) {
     return <p className="text-center text-gray-500 py-10">결과가 없습니다.</p>;
   }
@@ -22,6 +23,7 @@ export default function TouristSpotList({ spots, planId, visitDay }: TouristSpot
           spot={spot} 
           planId={planId} 
           visitDay={visitDay} 
+          categoryMap={categoryMap} // [추가됨] 맵을 아이템으로 전달
         />
       ))}
     </div>
