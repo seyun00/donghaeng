@@ -1,15 +1,16 @@
 // /src/tools/TouristSpotItem.tsx
 
 import React from 'react';
-import { TouristSpot } from "../api/FetchTourApi";
+import { TouristSpot, CategoryMap } from "../api/FetchTourApi";
 
 interface TouristSpotItemProps {
   spot: TouristSpot;
   planId: string | null;
   visitDay: string | null;
+  categoryMap: CategoryMap; 
 }
 
-const TouristSpotItem: React.FC<TouristSpotItemProps> = ({ spot, planId, visitDay }) => {
+const TouristSpotItem: React.FC<TouristSpotItemProps> = ({ spot, planId, visitDay, categoryMap }) => {
   let detailUrl = `/detail/${spot.id}/${spot.contentTypeId}`;
   if (planId) {
     detailUrl += `?planId=${planId}`;
@@ -18,8 +19,14 @@ const TouristSpotItem: React.FC<TouristSpotItemProps> = ({ spot, planId, visitDa
     }
   }
 
-  // 여행코스의 경우 개요정보를 사진 밑에 표시 안하도록 조건 설정함
-  const shouldShowDescription = spot.contentTypeId !== '25' && spot.description && spot.description !== '설명 없음';
+  const cat1Name = spot.lclsSystm1 ? categoryMap[spot.lclsSystm1] : null;
+  const cat2Name = spot.lclsSystm2 ? categoryMap[spot.lclsSystm2] : null;
+  const cat3Name = spot.lclsSystm3 ? categoryMap[spot.lclsSystm3] : null;
+  
+  const categoryString = [cat1Name, cat2Name, cat3Name].filter(Boolean).join(' > ');
+
+  // contentTypeId가 15(행사/공연/축제)가 아니고, 카테고리 문자열이 있을 때만 표시
+  const shouldShowCategory = spot.contentTypeId !== '15' && categoryString;
 
   return (
     <a 
@@ -45,11 +52,15 @@ const TouristSpotItem: React.FC<TouristSpotItemProps> = ({ spot, planId, visitDa
         <h3 className="text-lg font-semibold text-gray-800 truncate" title={spot.name}>
           {spot.name}
         </h3>
-        {/* 설명이 있을 경우에만 태그를 표시 */}
-        {shouldShowDescription && (
-            <p className="text-sm text-gray-600 mt-1 truncate" title={spot.description}>
-                {spot.description}
-            </p>
+
+        <p className="text-sm text-gray-600 mt-1 truncate" title={spot.location}>
+            {spot.location}
+        </p>
+        
+        {shouldShowCategory && (
+          <p className="text-xs text-indigo-600 font-semibold mt-2 truncate" title={categoryString}>
+            {categoryString}
+          </p>
         )}
       </div>
     </a>

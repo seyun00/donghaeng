@@ -11,6 +11,7 @@ import ResetPw from "./pages/ResetPw";
 import MyPage from "./pages/MyPage";
 import PlanManagement from "./pages/PlanManagement";
 import SearchSharedPlan from "./pages/SearchSharedPlan";
+import RecommendationPage from './pages/RecommendationPage';
 
 export default function RoutesSetup() {
   return (
@@ -29,6 +30,7 @@ export default function RoutesSetup() {
       <Route path="/shared/:planId" element={<Planning editable={false} />} />
       <Route path="/placeInformation" element={<PlaceInformation />} />
       <Route path="/detail/:contentId/:contentTypeId" element={<TourDetailPage />} />
+      <Route path="/recommendation" element={<RecommendationPage />} />
     </Routes>
   )
 }
