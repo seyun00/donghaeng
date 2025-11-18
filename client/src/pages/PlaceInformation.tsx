@@ -96,11 +96,11 @@ export default function PlaceInformation() {
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-800 sm:text-3xl">관광 장소 정보 페이지 </h1>
-          <Link to="/">
+          {/* <Link to="/">
             <button className="px-4 py-2 font-bold text-white transition-colors bg-blue-500 rounded-lg shadow-md hover:bg-blue-600">
               홈으로
             </button>
-          </Link>
+          </Link> */}
         </div>
 
         <div className="p-6 space-y-6 bg-white shadow-lg rounded-xl">

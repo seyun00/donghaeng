@@ -25,12 +25,12 @@ export default function RoutesSetup() {
         <Route path="mypage" element={<MyPage/>}/>
         <Route path="plans" element={<PlanManagement />} />
         <Route path="searchSharedPlan" element={<SearchSharedPlan/>}/>
+        <Route path="/placeInformation" element={<PlaceInformation />} />
+        <Route path="/detail/:contentId/:contentTypeId" element={<TourDetailPage />} />
+        <Route path="/recommendation" element={<RecommendationPage />} />
       </Route>
       <Route path="/planning/:planId" element={<Planning editable={true} />} />
       <Route path="/shared/:planId" element={<Planning editable={false} />} />
-      <Route path="/placeInformation" element={<PlaceInformation />} />
-      <Route path="/detail/:contentId/:contentTypeId" element={<TourDetailPage />} />
-      <Route path="/recommendation" element={<RecommendationPage />} />
     </Routes>
   )
 }
