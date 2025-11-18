@@ -5,10 +5,10 @@ export interface contentsType {
   typeName: string;
 }
 
-
 interface contentsTypeButtonProps extends contentsType {
   onClick: () => void;
   isActive: boolean;
+  className?: string; 
 }
 
 export const contentsTypeList: contentsType[] = [
@@ -22,16 +22,24 @@ export const contentsTypeList: contentsType[] = [
   { typeID: 39, typeName: "음식점" },
 ];
 
-const ContentsTypeButton: React.FC<contentsTypeButtonProps> = ({ typeID, typeName, onClick, isActive }) => {
-  const baseClasses = "py-2 px-4 rounded-lg font-semibold transition-colors duration-200 ease-in-out shadow-sm";
+const ContentsTypeButton: React.FC<contentsTypeButtonProps> = ({
+  typeID,
+  typeName,
+  onClick,
+  isActive,
+  className,
+}) => {
+  const baseClasses =
+    "py-2 px-4 rounded-lg font-semibold transition-colors duration-200 ease-in-out shadow-sm";
   const activeClasses = "bg-indigo-600 text-white";
   const inactiveClasses = "bg-gray-200 text-gray-700 hover:bg-gray-300";
+  // className prop 주면 커스텀, 아니면 기본
+  const btnClass = className
+    ? `${baseClasses} ${isActive ? activeClasses : inactiveClasses} ${className}`
+    : `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
 
   return (
-    <button
-      className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
-      onClick={onClick}
-    >
+    <button className={btnClass} onClick={onClick}>
       {typeName}
     </button>
   );

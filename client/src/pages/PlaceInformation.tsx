@@ -92,125 +92,135 @@ export default function PlaceInformation() {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 md:p-8 bg-gray-50">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 sm:text-3xl">관광 장소 정보 페이지 </h1>
-          {/* <Link to="/">
-            <button className="px-4 py-2 font-bold text-white transition-colors bg-blue-500 rounded-lg shadow-md hover:bg-blue-600">
-              홈으로
-            </button>
-          </Link> */}
-        </div>
-
-        <div className="p-6 space-y-6 bg-white shadow-lg rounded-xl">
-          <SearchInput value={searchQuery} onChange={setSearchQuery} />
-
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-2 font-semibold text-gray-700">지역 선택 :</span>
-            {regionList.map(item => (
-              <AreaButton 
-                key={item.id} 
-                region={item}
-                isActive={item.regionCode === currentRegionCode}
-                onClick={() => { 
-                  setCurrentRegionCode(item.regionCode); 
-                  setRegionSelected(true); 
-                  setSigunguList([]); 
-                  setCurrentSigunguCode(undefined); 
-                  setSigunguSelected(false); 
-                }} 
+  <div className="min-h-screen p-4 bg-gray-50 sm:p-8">
+    <div className="mx-auto max-w-7xl">
+      <div className="flex items-center justify-center mb-8">
+        <div className="text-3xl font-bold text-gray-800">관광 정보 검색</div>
+      </div>
+      <div className="flex flex-col gap-8 md:flex-row">
+        <div className="flex-1">
+          <div className="flex justify-center mb-8">
+            {/* 검색창: 넓이/배경/라운드/테두리 및 포커스 */}
+            <div className="w-full max-w-xl">
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                className="w-full px-5 py-3 text-lg transition bg-white border border-blue-300 shadow rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="관광지 이름을 검색하세요"
               />
-            ))}
+            </div>
           </div>
-
-          {regionSelected && sigunguList.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-2 font-semibold text-gray-700">시군구 선택 :</span>
-              {sigunguList.map(item => (
-                <SigunguButton 
-                  key={item.id} 
-                  sigungu={item} 
-                  isActive={item.sigunguCode === currentSigunguCode && sigunguSelected}
-                  onClick={() => { 
-                    setCurrentSigunguCode(item.sigunguCode); 
-                    setSigunguSelected(true); 
-                  }} 
+          <div className="mb-6">
+            <div className="flex flex-wrap justify-center gap-2 pb-2 overflow-x-auto">
+              {contentsTypeList.map(item => (
+                <ContentsTypeButton
+                  key={item.typeID}
+                  typeID={item.typeID}
+                  typeName={item.typeName}
+                  isActive={item.typeID === currentContentsType}
+                  onClick={() => setCurrentContentsType(item.typeID)}
+                  className="text-xs whitespace-nowrap min-w-20 max-w-32"
                 />
               ))}
             </div>
-          )}
-          
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-2 font-semibold text-gray-700">카테고리 선택 :</span>
-            {contentsTypeList.map(item => (
-              <ContentsTypeButton 
-                key={item.typeID} 
-                typeID={item.typeID} 
-                typeName={item.typeName}
-                isActive={item.typeID === currentContentsType}
-                onClick={() => setCurrentContentsType(item.typeID)} 
-              />
-            ))}
           </div>
-
-          {currentContentsType === 15 && (
-            <div className="flex flex-wrap items-center gap-4 pt-2">
-              <div>
-                <label htmlFor="event-start-date" className="mr-2 font-semibold text-gray-700">행사 시작일: </label>
-                <input 
-                  type="date" 
-                  id="event-start-date" 
-                  value={formatDateForInput(eventStartDate)} 
-                  onChange={handleDateChange} 
-                  className="p-2 border-gray-300 rounded-md shadow-sm"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="event-end-date" className="mr-2 font-semibold text-gray-700">종료일 (선택): </label>
-                <input 
-                  type="date" 
-                  id="event-end-date" 
-                  value={eventEndDate ? formatDateForInput(eventEndDate) : ''} 
-                  onChange={handleEndDateChange} 
-                  className="p-2 border-gray-300 rounded-md shadow-sm"
-                />
-                <button 
-                  onClick={() => setEventEndDate(null)} 
-                  className="px-3 py-2 ml-2 text-sm font-semibold text-gray-800 transition-colors bg-gray-200 rounded-lg hover:bg-gray-300"
-                >
-                  초기화
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        <div className="mt-8">
           {loading && <p className="text-center text-gray-500">로딩 중...</p>}
           {error && <p className="font-semibold text-center text-red-500">{error}</p>}
           {!loading && !error && (
-            <p className="mb-4 text-lg text-gray-600"> 
+            <p className="mb-4 text-lg text-gray-600">
               총 <span className="font-bold text-blue-600">{filteredSpots.length}</span>개의 장소가 검색되었습니다.
             </p>
           )}
-
-          
-          <TouristSpotList 
-            spots={currentSpots} 
-            planId={planId} 
+          <TouristSpotList
+            spots={currentSpots}
+            planId={planId}
             visitDay={visitDay}
             categoryMap={categoryMap}
           />
-
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
         </div>
+        <aside className="w-full p-6 space-y-6 bg-white shadow-lg md:w-72 xl:w-80 shrink-0 rounded-xl h-fit">
+          {/* 지역 선택 */}
+          <div>
+            <span className="block mb-2 font-semibold text-center text-gray-700">지역 선택</span>
+            <div className="flex flex-wrap justify-center gap-2">
+              {regionList.map(item => (
+                <AreaButton
+                  key={item.id}
+                  region={item}
+                  isActive={item.regionCode === currentRegionCode}
+                  onClick={() => {
+                    setCurrentRegionCode(item.regionCode);
+                    setRegionSelected(true);
+                    setSigunguList([]);
+                    setCurrentSigunguCode(undefined);
+                    setSigunguSelected(false);
+                  }}
+                  className="text-xs whitespace-nowrap min-w-20 max-w-32"
+                />
+              ))}
+            </div>
+          </div>
+          {/* 시군구 선택 */}
+          {regionSelected && sigunguList.length > 0 && (
+            <div>
+              <span className="block mb-2 font-semibold text-center text-gray-700">시군구 선택</span>
+              <div className="flex flex-wrap justify-center gap-2">
+                {sigunguList.map(item => (
+                  <SigunguButton
+                    key={item.id}
+                    sigungu={item}
+                    isActive={item.sigunguCode === currentSigunguCode && sigunguSelected}
+                    onClick={() => {
+                      setCurrentSigunguCode(item.sigunguCode);
+                      setSigunguSelected(true);
+                    }}
+                    className="text-xs whitespace-nowrap min-w-20 max-w-32"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          {currentContentsType === 15 && (
+            <div className="pt-2 space-y-2">
+              <div>
+                <label htmlFor="event-start-date" className="mr-2 font-semibold text-gray-700">행사 시작일:</label>
+                <input
+                  type="date"
+                  id="event-start-date"
+                  value={formatDateForInput(eventStartDate)}
+                  onChange={handleDateChange}
+                  className="p-2 border-gray-300 rounded-md shadow-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="event-end-date" className="mr-2 font-semibold text-gray-700">종료일 (선택):</label>
+                <input
+                  type="date"
+                  id="event-end-date"
+                  value={eventEndDate ? formatDateForInput(eventEndDate) : ''}
+                  onChange={handleEndDateChange}
+                  className="p-2 border-gray-300 rounded-md shadow-sm"
+                />
+                <button
+                  onClick={() => setEventEndDate(null)}
+                  className="px-3 py-2 ml-2 text-sm font-semibold text-gray-800 bg-gray-200 rounded-lg hover:bg-gray-300"
+                >
+                  초기화
+                </button>
+              </div>
+            </div>
+          )}
+        </aside>
       </div>
     </div>
-  );
+  </div>
+);
+
+
+
 }

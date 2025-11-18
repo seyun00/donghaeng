@@ -1,29 +1,30 @@
 // /src/tools/Tour_list.tsx
 
-import { TouristSpot, CategoryMap } from "../api/FetchTourApi"; // [수정됨] CategoryMap 임포트
+import { TouristSpot, CategoryMap } from "../api/FetchTourApi";
 import TouristSpotItem from "./TouristSpotItem";
 
 interface TouristSpotListProps {
   spots: TouristSpot[];
-  planId: string | null; 
+  planId: string | null;
   visitDay: string | null;
-  categoryMap: CategoryMap; // [추가됨] 카테고리 맵 prop
+  categoryMap: CategoryMap;
 }
 
 export default function TouristSpotList({ spots, planId, visitDay, categoryMap }: TouristSpotListProps) {
   if (spots.length === 0) {
-    return <p className="text-center text-gray-500 py-10">결과가 없습니다.</p>;
+    return <p className="py-10 text-center text-gray-500">결과가 없습니다.</p>;
   }
 
+  // ★ 한 줄에 3개로 제한, 카드 폭 넓힘
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
       {spots.map((spot) => (
-        <TouristSpotItem 
-          key={spot.id} 
-          spot={spot} 
-          planId={planId} 
-          visitDay={visitDay} 
-          categoryMap={categoryMap} // [추가됨] 맵을 아이템으로 전달
+        <TouristSpotItem
+          key={spot.id}
+          spot={spot}
+          planId={planId}
+          visitDay={visitDay}
+          categoryMap={categoryMap}
         />
       ))}
     </div>
