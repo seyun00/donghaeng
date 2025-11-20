@@ -97,7 +97,7 @@ export async function FetchSpotsByTaste(
     numOfRows: '10', 
     pageNo: '1',
     arrange: 'B', 
-    areaCode: areaCode?.toString(), 
+    lDongRegnCd: areaCode?.toString(),
     ...lclsParams, 
   };
   const validParams = Object.fromEntries(Object.entries(params).filter(([_, v]) => v != null));
