@@ -42,7 +42,7 @@
 - <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=Supabase&logoColor=white"/>
 - <img src="https://img.shields.io/badge/node.js-5FA04E?style=flat-square&logo=node.js&logoColor=white"/>
 
-### Api
+### API
 - Tourapi 4.3
 - Naver maps api
 - Kakao login, Google login
